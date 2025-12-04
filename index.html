@@ -365,8 +365,9 @@ D. Đáp án D
     </div>
   </div>
 
-  <button onclick="submitAnswer()">Trả lời</button>
+  <button id="submitBtn" onclick="submitAnswer()">Trả lời</button>
   <button class="secondary-btn" onclick="restartQuiz()">Làm lại từ đầu</button>
+  <button id="nextBtn" class="secondary-btn" style="display:none;margin-left:8px;" onclick="manualNext()">Tiếp tục</button>
 
   <div id="status"></div>
 </div>
@@ -385,6 +386,7 @@ let round = 1;
 let finished = false;
 let selectedChoice = null;
 let shuffleEnabled = false;
+let waitingToContinue = false; // chờ bấm "Tiếp tục" sau khi trả lời sai
 
 const LS_KEY_SETS  = "quizSets_v1";
 const LS_KEY_STATE = "quizCurrentState_v1";
@@ -715,6 +717,8 @@ function startQuiz() {
   round     = 1;
   current   = 0;
   finished  = false;
+  waitingToContinue = false;
+  document.getElementById("nextBtn").style.display = "none";
 
   document.getElementById("quiz-box").style.display = "block";
   renderQuestion();
@@ -755,6 +759,8 @@ function renderQuestion() {
   st.innerText = ""; st.className = "";
 
   selectedChoice = null;
+  waitingToContinue = false;
+  document.getElementById("nextBtn").style.display = "none";
   clearChoiceStyles();
   updateChoiceSelection();
   saveCurrentState();
@@ -770,6 +776,7 @@ function updateChoiceSelection() {
 function attachChoiceEvents() {
   document.querySelectorAll(".choice-card").forEach(card=>{
     card.addEventListener("click", ()=>{
+      if (waitingToContinue) return; // đang chờ bấm Tiếp tục, không cho đổi
       selectedChoice = Number(card.getAttribute("data-index"));
       updateChoiceSelection();
     });
@@ -796,6 +803,7 @@ function attachImageZoomEvents() {
 
 function submitAnswer() {
   if (finished) return;
+  if (waitingToContinue) return; // tránh spam khi đang chờ tiếp tục
   if (selectedChoice===null) return alert("Hãy chọn một đáp án.");
 
   const qIndex = roundList[current];
@@ -811,17 +819,34 @@ function submitAnswer() {
     if (cards[selectedChoice]) {
       cards[selectedChoice].classList.add("correct");
     }
+    saveCurrentState();
+    setTimeout(nextQuestion, 900);
   } else {
-    st.innerText = "Sai – câu này sẽ được làm lại ở lượt sau.";
+    st.innerText = "Sai – đáp án đúng đã được tô xanh. Bấm \"Tiếp tục\" để sang câu kế.";
     st.className = "err";
+
+    // tô đỏ đáp án chọn sai
     if (cards[selectedChoice]) {
       cards[selectedChoice].classList.add("incorrect");
     }
-    if (!wrongList.includes(qIndex)) wrongList.push(qIndex);
-  }
+    // tô xanh đáp án đúng
+    if (cards[q.correctIndex]) {
+      cards[q.correctIndex].classList.add("correct");
+    }
 
-  saveCurrentState();
-  setTimeout(nextQuestion, 900);
+    if (!wrongList.includes(qIndex)) wrongList.push(qIndex);
+
+    waitingToContinue = true;
+    document.getElementById("nextBtn").style.display = "inline-block";
+    saveCurrentState();
+  }
+}
+
+function manualNext() {
+  if (!waitingToContinue) return;
+  waitingToContinue = false;
+  document.getElementById("nextBtn").style.display = "none";
+  nextQuestion();
 }
 
 function nextQuestion() {
@@ -859,6 +884,8 @@ function restartQuiz() {
   round = 1;
   current = 0;
   finished = false;
+  waitingToContinue = false;
+  document.getElementById("nextBtn").style.display = "none";
   renderQuestion();
 }
 
