@@ -311,7 +311,7 @@ A.appreciate; 3%  B.appreciate; 1%  C.depreciate; 3%  D.appreciate; 2%
 
 <script>
 let questions = [];   // { text, choices[4], correctIndex }
-let roundList = [];   // index câu trong lượt hiện tại (là index trong mảng questions)
+let roundList = [];   // index câu trong lượt hiện tại (theo mảng questions)
 let wrongList = [];   // index câu sai dùng cho lượt sau
 let current = 0;
 let round = 1;
@@ -319,7 +319,8 @@ let finished = false;
 let selectedChoice = null;
 let shuffleEnabled = false; // có bật xáo trộn không
 
-const LS_KEY = "quizSets_v1"; // key lưu bộ đề trong LocalStorage
+const LS_KEY_SETS = "quizSets_v1";          // lưu nhiều bộ đề
+const LS_KEY_STATE = "quizCurrentState_v1"; // lưu trạng thái đang làm
 
 // ======== HÀM SHUFFLE MẢNG (FISHER-YATES) ========
 function shuffleArray(arr) {
@@ -331,10 +332,10 @@ function shuffleArray(arr) {
   return a;
 }
 
-// ======== HÀM LƯU/LOAD BỘ ĐỀ TỪ LOCALSTORAGE ========
+// ======== LƯU / LOAD BỘ ĐỀ TỪ LOCALSTORAGE ========
 function getSavedSets() {
   try {
-    const raw = localStorage.getItem(LS_KEY);
+    const raw = localStorage.getItem(LS_KEY_SETS);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -347,7 +348,7 @@ function getSavedSets() {
 
 function saveSetsToLS(sets) {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(sets));
+    localStorage.setItem(LS_KEY_SETS, JSON.stringify(sets));
   } catch (e) {
     console.error("Lỗi lưu LocalStorage:", e);
   }
@@ -449,6 +450,72 @@ function deleteSelectedSet() {
   saveSetsToLS(sets);
   refreshSavedSetsUI();
   alert("Đã xoá bộ đề.");
+}
+
+// ======== LƯU / LOAD TRẠNG THÁI QUIZ (B) ========
+function saveCurrentState() {
+  if (!questions || questions.length === 0) {
+    localStorage.removeItem(LS_KEY_STATE);
+    return;
+  }
+  const state = {
+    rawQuestions: document.getElementById("rawQuestions").value.trim(),
+    answerKey: document.getElementById("answerKey").value.trim().toUpperCase().replace(/\s+/g,""),
+    setName: document.getElementById("setName").value.trim(),
+    questions,
+    shuffleEnabled,
+    round,
+    current,
+    roundList,
+    wrongList,
+    finished
+  };
+  try {
+    localStorage.setItem(LS_KEY_STATE, JSON.stringify(state));
+  } catch (e) {
+    console.error("Lỗi lưu trạng thái quiz:", e);
+  }
+}
+
+function tryRestoreQuizState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY_STATE);
+    if (!raw) return;
+    const state = JSON.parse(raw);
+    if (!state || !Array.isArray(state.questions) || state.questions.length === 0) return;
+
+    const setLabel = state.setName ? ('"'+state.setName+'"') : "(chưa đặt tên)";
+    const ok = confirm(
+      `Phát hiện bạn có bài đang làm dở cho bộ đề ${setLabel}.\nBạn có muốn tiếp tục không?`
+    );
+    if (!ok) return;
+
+    // Khôi phục input
+    if (state.rawQuestions) {
+      document.getElementById("rawQuestions").value = state.rawQuestions;
+    }
+    if (state.answerKey) {
+      document.getElementById("answerKey").value = state.answerKey;
+    }
+    if (state.setName) {
+      document.getElementById("setName").value = state.setName;
+    }
+
+    questions = state.questions;
+    shuffleEnabled = !!state.shuffleEnabled;
+    round = state.round || 1;
+    current = state.current || 0;
+    roundList = Array.isArray(state.roundList) && state.roundList.length
+      ? state.roundList
+      : questions.map((_,i)=>i);
+    wrongList = Array.isArray(state.wrongList) ? state.wrongList : [];
+    finished = !!state.finished;
+
+    document.getElementById("quiz-box").style.display = "block";
+    renderQuestion(); // render sẽ gọi saveCurrentState() lại
+  } catch (e) {
+    console.error("Lỗi khôi phục trạng thái quiz:", e);
+  }
 }
 
 // ==================== PARSE ĐỀ TỪ TEXT ====================
@@ -563,6 +630,7 @@ function createQuiz() {
   }
 
   questions = tempQuestions;
+  // Bắt đầu quiz mới → ghi đè state cũ
   startQuiz();
 }
 
@@ -610,6 +678,9 @@ function renderQuestion() {
 
   selectedChoice = null;
   updateChoiceSelection();
+
+  // Mỗi lần render một câu → lưu trạng thái hiện tại
+  saveCurrentState();
 }
 
 // ==================== CHỌN ĐÁP ÁN (BẤM BLOCK) ====================
@@ -632,6 +703,7 @@ function attachChoiceEvents() {
       const idx = Number(card.getAttribute("data-index"));
       selectedChoice = idx;
       updateChoiceSelection();
+      // có thể lưu luôn nếu muốn, nhưng không cần thiết cho B
     });
   });
 }
@@ -656,8 +728,13 @@ function submitAnswer() {
   } else {
     statusEl.innerText = "Sai – câu này sẽ được làm lại ở lượt sau.";
     statusEl.className = "err";
-    wrongList.push(qIndex);
+    if (!wrongList.includes(qIndex)) {
+      wrongList.push(qIndex);
+    }
   }
+
+  // Lưu lại trạng thái sau khi chấm
+  saveCurrentState();
 
   setTimeout(() => nextQuestion(), 700);
 }
@@ -685,11 +762,12 @@ function nextQuestion() {
       statusEl.innerText =
         `Bạn vẫn còn câu sai. Chuyển sang lượt ${round} chỉ gồm các câu sai.`;
       statusEl.className = "err";
-      setTimeout(() => renderQuestion(), 800);
+      renderQuestion();
     } else {
       finished = true;
       statusEl.innerText = "🎉 Hoàn thành! Tất cả câu hỏi đều đúng.";
       statusEl.className = "ok";
+      saveCurrentState();
     }
   }
 }
@@ -714,6 +792,7 @@ function restartQuiz() {
 function init() {
   attachChoiceEvents();
   refreshSavedSetsUI();
+  tryRestoreQuizState(); // thử khôi phục bài đang làm dở
 }
 
 document.addEventListener("DOMContentLoaded", init);
