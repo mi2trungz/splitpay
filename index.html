@@ -88,6 +88,12 @@
       box-shadow: 0 4px 12px rgba(185,28,28,0.6);
     }
 
+    /* Nút Trả lời dài hơn */
+    #submitBtn {
+      padding: 10px 36px;  /* rộng hơn nút thường */
+      min-width: 150px;
+    }
+
     .inline-row {
       display: flex;
       gap: 8px;
@@ -243,6 +249,9 @@
       font-size: 17px;
       padding: 12px 18px;
     }
+    body.mobile-mode #submitBtn {
+      padding: 12px 40px; /* trên điện thoại còn rộng hơn */
+    }
     body.mobile-mode #quiz-title {
       font-size: 21px;
     }
@@ -366,7 +375,8 @@ D. Đáp án D
   </div>
 
   <button id="submitBtn" onclick="submitAnswer()">Trả lời</button>
-  <button class="secondary-btn" onclick="restartQuiz()">Làm lại từ đầu</button>
+  <!-- Đổi nút thành Reset + confirm -->
+  <button id="resetBtn" class="secondary-btn" onclick="confirmReset()">Reset</button>
   <button id="nextBtn" class="secondary-btn" style="display:none;margin-left:8px;" onclick="manualNext()">Tiếp tục</button>
 
   <div id="status"></div>
@@ -887,6 +897,15 @@ function restartQuiz() {
   waitingToContinue = false;
   document.getElementById("nextBtn").style.display = "none";
   renderQuestion();
+}
+
+/* Xác nhận trước khi reset */
+function confirmReset() {
+  if (!questions.length) return;
+  const ok = confirm("Bạn có chắc chắn muốn Reset lượt làm bài này không?\nTất cả tiến trình (lượt, câu sai, trạng thái) sẽ bắt đầu lại từ đầu.");
+  if (ok) {
+    restartQuiz();
+  }
 }
 
 /* ----- Chế độ giao diện điện thoại ----- */
