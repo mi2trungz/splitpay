@@ -47,16 +47,6 @@
     }
     textarea { min-height: 180px; resize: vertical; }
 
-    pre {
-      background: #020617;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #1f2937;
-      color: #9ca3af;
-      white-space: pre-wrap;
-      font-size: 13px;
-    }
-
     button {
       padding: 10px 18px;
       border: none;
@@ -90,8 +80,20 @@
 
     /* Nút Trả lời dài hơn */
     #submitBtn {
-      padding: 10px 36px;  /* rộng hơn nút thường */
+      padding: 10px 36px;
       min-width: 150px;
+    }
+
+    /* Nút Tiếp tục – màu vàng */
+    #nextBtn {
+      background: #eab308;
+      color: #111827;
+      box-shadow: 0 8px 20px rgba(234,179,8,0.5);
+      padding: 10px 36px;
+      min-width: 150px;
+    }
+    #nextBtn:hover {
+      box-shadow: 0 10px 26px rgba(234,179,8,0.7);
     }
 
     .inline-row {
@@ -236,9 +238,6 @@
     body.mobile-mode h2 {
       font-size: 22px;
     }
-    body.mobile-mode pre {
-      font-size: 14px;
-    }
     body.mobile-mode textarea,
     body.mobile-mode input,
     body.mobile-mode select {
@@ -249,8 +248,9 @@
       font-size: 17px;
       padding: 12px 18px;
     }
-    body.mobile-mode #submitBtn {
-      padding: 12px 40px; /* trên điện thoại còn rộng hơn */
+    body.mobile-mode #submitBtn,
+    body.mobile-mode #nextBtn {
+      padding: 12px 40px;
     }
     body.mobile-mode #quiz-title {
       font-size: 21px;
@@ -273,28 +273,6 @@
 
 <div class="box">
   <h2>Bước 1: Dán đề</h2>
-  <p><strong>Format ví dụ (có ảnh và không ảnh):</strong></p>
-  <pre>
-Câu 1: Đây là câu hỏi có hình minh hoạ.
-IMG: https://example.com/hinh1.png
-A. Đáp án A
-B. Đáp án B
-C. Đáp án C
-D. Đáp án D
-
-Câu 2: Câu này dùng thẳng thẻ &lt;img&gt;.
-&lt;img src="https://example.com/hinh2.png"&gt;
-A. Đáp án A
-B. Đáp án B
-C. Đáp án C
-D. Đáp án D
-
-Câu 3: Không có hình.
-A. Đáp án A
-B. Đáp án B
-C. Đáp án C
-D. Đáp án D
-  </pre>
 
   <textarea id="rawQuestions" placeholder="Dán tất cả câu hỏi vào đây..."></textarea>
 
@@ -317,7 +295,7 @@ D. Đáp án D
   <h2>Bộ đề đã lưu</h2>
   <div class="inline-row">
     <select id="savedSetsSelect"></select>
-    <button onclick="loadSelectedSet()">Tải bộ đề</button>
+    <button onclick="loadSelectedSet()">Load Đề</button>
     <button class="danger-btn" onclick="deleteSelectedSet()">Xoá bộ đề</button>
   </div>
   <div class="inline-row" style="margin-top:8px;">
@@ -326,7 +304,7 @@ D. Đáp án D
   </div>
   <input type="file" id="setsFileInput" accept="application/json" style="display:none" onchange="importSetsFromFile(event)" />
   <div class="small-hint">
-    Bộ đề được lưu trong LocalStorage. Bạn có thể xuất ra file JSON để backup, rồi tải lên lại khi đổi máy hoặc trình duyệt.
+    
   </div>
 
   <hr style="border-color:#1f2937;margin:18px 0;" />
@@ -374,10 +352,10 @@ D. Đáp án D
     </div>
   </div>
 
+  <!-- Lưu ý: Next đặt ngay sau Submit để chiếm đúng vị trí -->
   <button id="submitBtn" onclick="submitAnswer()">Trả lời</button>
-  <!-- Đổi nút thành Reset + confirm -->
+  <button id="nextBtn" class="secondary-btn" style="display:none;" onclick="manualNext()">Tiếp tục</button>
   <button id="resetBtn" class="secondary-btn" onclick="confirmReset()">Reset</button>
-  <button id="nextBtn" class="secondary-btn" style="display:none;margin-left:8px;" onclick="manualNext()">Tiếp tục</button>
 
   <div id="status"></div>
 </div>
@@ -583,7 +561,7 @@ function tryRestoreQuizState() {
   } catch {}
 }
 
-/* ---------- parse đề (hỗ trợ <img> & IMG:, câu hỏi nhiều dòng) ---------- */
+/* ---------- parse đề ---------- */
 function parseQuestions(raw) {
   const blocks = raw
     .split(/(?=Câu\s*\d+\s*:)/g)
@@ -596,22 +574,20 @@ function parseQuestions(raw) {
     if (!origBlock) return;
     let block = origBlock.trim();
 
-    // 1) ƯU TIÊN tìm thẻ <img ...> trong cả block
+    // Ưu tiên thẻ <img> toàn block
     let imageUrl = null;
     const imgTagMatch = block.match(/<img\b[^>]*src=["']([^"']+)["'][^>]*>/i);
     if (imgTagMatch) {
       imageUrl = imgTagMatch[1].trim();
-      block = block.replace(imgTagMatch[0], "").trim(); // bỏ <img> khỏi text
+      block = block.replace(imgTagMatch[0], "").trim();
     }
 
-    // 2) Tìm dòng "Câu xx:"
     const qMatch = block.match(/^Câu\s*\d+\s*:.*$/m);
     if (!qMatch) return;
 
     const headerLine = qMatch[0];
     const afterHeader = block.slice(qMatch.index + headerLine.length);
 
-    // 3) Gom thêm các dòng tiếp theo thuộc câu hỏi
     const lines = afterHeader.split(/\r?\n/);
     let extraLines = [];
     let offsetInAfter = 0;
@@ -619,41 +595,28 @@ function parseQuestions(raw) {
     for (let i = 0; i < lines.length; i++) {
       const ln = lines[i];
       const trimmed = ln.trim();
-
-      // Nếu dòng bắt đầu bằng A./B./C./D. hoặc IMG: hoặc <img> => dừng
-      if (trimmed.match(/^(?:[ABCD]\.|IMG\s*:|<img\b)/i)) {
-        break;
-      }
-
+      if (trimmed.match(/^(?:[ABCD]\.|IMG\s*:|<img\b)/i)) break;
       extraLines.push(ln);
-      offsetInAfter += ln.length + 1; // +1 cho ký tự xuống dòng
+      offsetInAfter += ln.length + 1;
     }
 
     let questionText = headerLine;
-    if (extraLines.length) {
-      questionText += "\n" + extraLines.join("\n");
-    }
-    questionText = questionText.trim();
-    questionText = normalizeSpaces(questionText);
+    if (extraLines.length) questionText += "\n" + extraLines.join("\n");
+    questionText = normalizeSpaces(questionText.trim());
 
     let after = afterHeader.slice(offsetInAfter).trim();
 
-    // 4) Nếu CHƯA có hình, mới tìm thêm dòng "IMG: ..."
+    // IMG: nếu chưa có hình
     if (!imageUrl) {
       const imgLineMatch = after.match(/^IMG\s*:\s*(.+)$/m);
       if (imgLineMatch) {
         let imgLine = imgLineMatch[1].trim();
         const tagMatch2 = imgLine.match(/<img\b[^>]*src=["']([^"']+)["'][^>]*>/i);
-        if (tagMatch2) {
-          imageUrl = tagMatch2[1].trim();
-        } else {
-          imageUrl = imgLine;
-        }
+        imageUrl = tagMatch2 ? tagMatch2[1].trim() : imgLine;
         after = after.replace(imgLineMatch[0], "").trim();
       }
     }
 
-    // 5) Parse đáp án A/B/C/D
     const choicesObj = { A:"", B:"", C:"", D:"" };
     const re = /([ABCD])\.(.*?)(?=(?:[ABCD]\.|$))/gs;
     let m;
@@ -681,7 +644,7 @@ function parseQuestions(raw) {
   return parsed;
 }
 
-/* ---------- tạo đề từ text + đáp án ---------- */
+/* ---------- tạo đề ---------- */
 function createQuiz() {
   const raw = document.getElementById("rawQuestions").value.trim();
   const key = document.getElementById("answerKey").value
@@ -729,6 +692,7 @@ function startQuiz() {
   finished  = false;
   waitingToContinue = false;
   document.getElementById("nextBtn").style.display = "none";
+  document.getElementById("submitBtn").style.display = "inline-block";
 
   document.getElementById("quiz-box").style.display = "block";
   renderQuestion();
@@ -749,7 +713,6 @@ function renderQuestion() {
   document.getElementById("quiz-title").innerText = q.text;
   document.getElementById("quiz-text").innerText  = "";
 
-  // render ảnh nếu có
   const imgWrap = document.getElementById("quiz-image-wrapper");
   const imgEl   = document.getElementById("quiz-image");
   if (q.image) {
@@ -771,6 +734,7 @@ function renderQuestion() {
   selectedChoice = null;
   waitingToContinue = false;
   document.getElementById("nextBtn").style.display = "none";
+  document.getElementById("submitBtn").style.display = "inline-block";
   clearChoiceStyles();
   updateChoiceSelection();
   saveCurrentState();
@@ -786,7 +750,7 @@ function updateChoiceSelection() {
 function attachChoiceEvents() {
   document.querySelectorAll(".choice-card").forEach(card=>{
     card.addEventListener("click", ()=>{
-      if (waitingToContinue) return; // đang chờ bấm Tiếp tục, không cho đổi
+      if (waitingToContinue) return;
       selectedChoice = Number(card.getAttribute("data-index"));
       updateChoiceSelection();
     });
@@ -813,7 +777,7 @@ function attachImageZoomEvents() {
 
 function submitAnswer() {
   if (finished) return;
-  if (waitingToContinue) return; // tránh spam khi đang chờ tiếp tục
+  if (waitingToContinue) return;
   if (selectedChoice===null) return alert("Hãy chọn một đáp án.");
 
   const qIndex = roundList[current];
@@ -835,11 +799,9 @@ function submitAnswer() {
     st.innerText = "Sai – đáp án đúng đã được tô xanh. Bấm \"Tiếp tục\" để sang câu kế.";
     st.className = "err";
 
-    // tô đỏ đáp án chọn sai
     if (cards[selectedChoice]) {
       cards[selectedChoice].classList.add("incorrect");
     }
-    // tô xanh đáp án đúng
     if (cards[q.correctIndex]) {
       cards[q.correctIndex].classList.add("correct");
     }
@@ -847,6 +809,7 @@ function submitAnswer() {
     if (!wrongList.includes(qIndex)) wrongList.push(qIndex);
 
     waitingToContinue = true;
+    document.getElementById("submitBtn").style.display = "none";
     document.getElementById("nextBtn").style.display = "inline-block";
     saveCurrentState();
   }
@@ -856,6 +819,7 @@ function manualNext() {
   if (!waitingToContinue) return;
   waitingToContinue = false;
   document.getElementById("nextBtn").style.display = "none";
+  document.getElementById("submitBtn").style.display = "inline-block";
   nextQuestion();
 }
 
@@ -896,6 +860,7 @@ function restartQuiz() {
   finished = false;
   waitingToContinue = false;
   document.getElementById("nextBtn").style.display = "none";
+  document.getElementById("submitBtn").style.display = "inline-block";
   renderQuestion();
 }
 
@@ -903,9 +868,7 @@ function restartQuiz() {
 function confirmReset() {
   if (!questions.length) return;
   const ok = confirm("Bạn có chắc chắn muốn Reset lượt làm bài này không?\nTất cả tiến trình (lượt, câu sai, trạng thái) sẽ bắt đầu lại từ đầu.");
-  if (ok) {
-    restartQuiz();
-  }
+  if (ok) restartQuiz();
 }
 
 /* ----- Chế độ giao diện điện thoại ----- */
@@ -924,7 +887,6 @@ function init() {
   refreshSavedSetsUI();
   tryRestoreQuizState();
 
-  // khôi phục mobile-mode nếu có
   try {
     const mm = localStorage.getItem("quizMobileMode");
     if (mm === "1") {
