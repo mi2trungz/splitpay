@@ -267,10 +267,13 @@ A.appreciate; 3%  B.appreciate; 1%  C.depreciate; 3%  D.appreciate; 2%
   <h2>Lịch sử làm bài</h2>
   <div class="inline-row">
     <button class="secondary-btn" onclick="exportHistory()">Xuất lịch sử (.json)</button>
+    <button onclick="triggerImportHistory()">Tải lịch sử từ file</button>
     <button class="danger-btn" onclick="clearHistory()">Xoá lịch sử</button>
   </div>
+  <input type="file" id="historyFileInput" accept="application/json" style="display:none" onchange="importHistoryFromFile(event)" />
   <div class="small-hint">
-    Lịch sử ghi lại mỗi lần bạn bấm "Trả lời" (câu, lượt, đáp án chọn, đúng/sai...).
+    Lịch sử ghi lại mỗi lần bạn bấm "Trả lời" (câu, lượt, đáp án chọn, đúng/sai...).<br>
+    Bạn có thể tải xuống .json rồi tải lên lại để giữ lịch sử khi đổi máy.
   </div>
 
   <hr style="border-color:#1f2937;margin:18px 0;" />
@@ -526,6 +529,35 @@ function exportHistory() {
   URL.revokeObjectURL(url);
 }
 
+function triggerImportHistory() {
+  const input = document.getElementById("historyFileInput");
+  input.click();
+}
+
+function importHistoryFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) {
+        alert("File không đúng định dạng lịch sử (phải là mảng JSON).");
+        return;
+      }
+      quizHistory = data;
+      saveHistoryToLS();
+      alert("Đã nhập " + data.length + " bản ghi lịch sử từ file.");
+    } catch (err) {
+      console.error(err);
+      alert("Không đọc được file JSON lịch sử.");
+    } finally {
+      event.target.value = ""; // reset input để lần sau chọn lại file được
+    }
+  };
+  reader.readAsText(file);
+}
+
 function clearHistory() {
   if (!confirm("Bạn có chắc muốn xoá toàn bộ lịch sử làm bài không?")) return;
   quizHistory = [];
@@ -537,7 +569,7 @@ function clearHistory() {
   alert("Đã xoá lịch sử làm bài.");
 }
 
-// ======== LƯU / LOAD TRẠNG THÁI QUIZ (B) ========
+// ======== LƯU / LOAD TRẠNG THÁI QUIZ ========
 function saveCurrentState() {
   if (!questions || questions.length === 0) {
     localStorage.removeItem(LS_KEY_STATE);
