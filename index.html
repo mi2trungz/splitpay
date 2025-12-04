@@ -260,8 +260,13 @@ A.appreciate; 3%  B.appreciate; 1%  C.depreciate; 3%  D.appreciate; 2%
     <button onclick="loadSelectedSet()">Tải bộ đề</button>
     <button class="danger-btn" onclick="deleteSelectedSet()">Xoá bộ đề</button>
   </div>
+  <div class="inline-row" style="margin-top:8px;">
+    <button class="secondary-btn" onclick="exportSets()">Xuất tất cả bộ đề (.json)</button>
+    <button onclick="triggerImportSets()">Tải bộ đề từ file</button>
+  </div>
+  <input type="file" id="setsFileInput" accept="application/json" style="display:none" onchange="importSetsFromFile(event)" />
   <div class="small-hint">
-    Các bộ đề lưu trong trình duyệt (LocalStorage). Xoá cache trình duyệt thì mất.
+    Bộ đề được lưu trong LocalStorage. Bạn có thể xuất ra file JSON để backup, rồi tải lên lại khi đổi máy hoặc trình duyệt.
   </div>
 
   <h2>Lịch sử làm bài</h2>
@@ -272,8 +277,7 @@ A.appreciate; 3%  B.appreciate; 1%  C.depreciate; 3%  D.appreciate; 2%
   </div>
   <input type="file" id="historyFileInput" accept="application/json" style="display:none" onchange="importHistoryFromFile(event)" />
   <div class="small-hint">
-    Lịch sử ghi lại mỗi lần bạn bấm "Trả lời" (câu, lượt, đáp án chọn, đúng/sai...).<br>
-    Bạn có thể tải xuống .json rồi tải lên lại để giữ lịch sử khi đổi máy.
+    Lịch sử ghi lại mỗi lần bạn bấm "Trả lời" (câu, lượt, đáp án chọn, đúng/sai...).
   </div>
 
   <hr style="border-color:#1f2937;margin:18px 0;" />
@@ -466,6 +470,67 @@ function deleteSelectedSet() {
   alert("Đã xoá bộ đề.");
 }
 
+// ======== EXPORT / IMPORT BỘ ĐỀ (.JSON) ========
+function exportSets() {
+  const sets = getSavedSets();
+  if (!sets.length) {
+    alert("Chưa có bộ đề nào để xuất.");
+    return;
+  }
+  const dataStr = JSON.stringify(sets, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dateStr = new Date().toISOString().split("T")[0];
+  a.href = url;
+  a.download = `quiz_sets_${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function triggerImportSets() {
+  const input = document.getElementById("setsFileInput");
+  input.click();
+}
+
+function importSetsFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) {
+        alert("File bộ đề không đúng định dạng (phải là mảng JSON).");
+        return;
+      }
+      let currentSets = getSavedSets();
+      data.forEach(newSet => {
+        if (!newSet || typeof newSet !== "object") return;
+        if (!newSet.name || !newSet.rawQuestions || !newSet.answerKey) return;
+        const idx = currentSets.findIndex(s => s.name === newSet.name);
+        if (idx >= 0) {
+          // tên trùng -> ghi đè
+          currentSets[idx] = newSet;
+        } else {
+          currentSets.push(newSet);
+        }
+      });
+      saveSetsToLS(currentSets);
+      refreshSavedSetsUI();
+      alert("Đã import bộ đề từ file. Tổng số bộ đề hiện có: " + currentSets.length);
+    } catch (err) {
+      console.error(err);
+      alert("Không đọc được file JSON bộ đề.");
+    } finally {
+      event.target.value = "";
+    }
+  };
+  reader.readAsText(file);
+}
+
 // ======== LỊCH SỬ LÀM BÀI (HISTORY) ========
 function loadHistoryFromLS() {
   try {
@@ -552,7 +617,7 @@ function importHistoryFromFile(event) {
       console.error(err);
       alert("Không đọc được file JSON lịch sử.");
     } finally {
-      event.target.value = ""; // reset input để lần sau chọn lại file được
+      event.target.value = ""; // reset input
     }
   };
   reader.readAsText(file);
