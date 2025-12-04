@@ -1,7 +1,30 @@
+Chuẩn, nhìn screenshot là biết đang bị 2 lỗi:
+
+1. **Không có thẻ `<meta name="viewport"...>`** nên Safari tự zoom nhỏ toàn bộ trang.
+2. Mobile mode mình để chữ hơi nhỏ.
+
+Mình đã sửa cả hai:
+
+* Thêm:
+
+  ```html
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  ```
+* Tăng font & padding khi bật **“Chế độ giao diện điện thoại”**:
+
+  * body ~ 19–20px
+  * input / textarea / đáp án / nút bấm đều to hơn, dễ bấm tay.
+
+Dưới đây là **file HTML hoàn chỉnh mới** (giữ nguyên mọi chức năng cũ: lưu bộ đề, lưu trạng thái, xáo trộn, ảnh + zoom, tô xanh/đỏ, 3 khoảng trắng → `___`, mobile toggle…):
+
+> 👉 Chỉ cần **copy hết, dán đè** file hiện tại.
+
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Quiz luyện câu sai (dán đề + đáp án)</title>
   <style>
     :root { color-scheme: dark; }
@@ -10,6 +33,8 @@
       background: #020617;
       padding: 20px;
       color: #e5e7eb;
+      font-size: 16px;
+      line-height: 1.4;
     }
     .box {
       background: #020617;
@@ -36,6 +61,7 @@
       color: #e5e7eb;
       outline: none;
       box-shadow: inset 0 0 0 1px rgba(15,23,42,0.6);
+      font-size: 15px;
     }
     textarea:focus, input:focus, select:focus {
       border-color: #6366f1;
@@ -50,6 +76,7 @@
       border: 1px solid #1f2937;
       color: #9ca3af;
       white-space: pre-wrap;
+      font-size: 13px;
     }
 
     button {
@@ -63,6 +90,7 @@
       margin-right: 8px;
       box-shadow: 0 8px 20px rgba(99,102,241,0.4);
       transition: transform 0.08s, box-shadow 0.08s, opacity 0.15s;
+      font-size: 14px;
     }
     button:hover {
       opacity: 0.95;
@@ -208,8 +236,9 @@
 
     /* ===== Chế độ giao diện điện thoại ===== */
     body.mobile-mode {
-      font-size: 18px;
-      padding: 12px 8px;
+      font-size: 19px;
+      line-height: 1.5;
+      padding: 10px 6px;
     }
     body.mobile-mode .box,
     body.mobile-mode .question-card {
@@ -220,12 +249,36 @@
       border-left: none;
       border-right: none;
     }
+    body.mobile-mode h2 {
+      font-size: 22px;
+    }
+    body.mobile-mode pre {
+      font-size: 14px;
+    }
+    body.mobile-mode textarea,
+    body.mobile-mode input,
+    body.mobile-mode select {
+      font-size: 18px;
+      padding: 10px 10px;
+    }
     body.mobile-mode button {
-      font-size: 16px;
-      padding: 12px 16px;
+      font-size: 17px;
+      padding: 12px 18px;
+    }
+    body.mobile-mode #quiz-title {
+      font-size: 21px;
+    }
+    body.mobile-mode #progress {
+      font-size: 15px;
     }
     body.mobile-mode .choice-card {
-      padding: 14px 16px;
+      padding: 16px 18px;
+    }
+    body.mobile-mode .choice-text {
+      font-size: 18px;
+    }
+    body.mobile-mode .choice-prefix {
+      font-size: 18px;
     }
   </style>
 </head>
@@ -862,3 +915,6 @@ document.addEventListener("DOMContentLoaded", init);
 
 </body>
 </html>
+```
+
+Bạn deploy lại rồi mở trên điện thoại, bật **“Chế độ giao diện điện thoại: Bật”**, nếu vẫn thấy nhỏ quá mình có thể tăng font thêm nữa (ví dụ 21–22px).
