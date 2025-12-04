@@ -102,8 +102,16 @@
     }
 
     #progress { margin-bottom: 8px; font-size: 14px; color: #9ca3af; }
-    #quiz-title { font-size: 18px; margin-bottom: 6px; }
-    #quiz-text { color: #d1d5db; margin-bottom: 8px; }
+    #quiz-title {
+      font-size: 18px;
+      margin-bottom: 6px;
+      white-space: pre-wrap;
+    }
+    #quiz-text {
+      color: #d1d5db;
+      margin-bottom: 8px;
+      white-space: pre-wrap;
+    }
 
     /* ảnh của câu hỏi */
     #quiz-image-wrapper { margin-bottom: 12px; }
@@ -112,6 +120,30 @@
       border-radius: 10px;
       border: 1px solid #1f2937;
       display: block;
+      cursor: zoom-in;
+      transition: box-shadow 0.12s, transform 0.08s;
+    }
+    #quiz-image:hover {
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.7);
+      transform: translateY(-1px);
+    }
+
+    /* modal phóng to ảnh */
+    #image-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      cursor: zoom-out;
+    }
+    #image-modal {
+      max-width: 92vw;
+      max-height: 92vh;
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.9);
     }
 
     /* Block answer style */
@@ -146,7 +178,10 @@
       flex-shrink: 0;
       min-width: 20px;
     }
-    .choice-text { color: #e5e7eb; white-space: normal; }
+    .choice-text {
+      color: #e5e7eb;
+      white-space: pre-wrap;
+    }
 
     #status { margin-top: 12px; font-weight: bold; }
     #status.ok { color: #4ade80; }
@@ -265,6 +300,11 @@ D. Đáp án D
   <div id="status"></div>
 </div>
 
+<!-- overlay phóng to ảnh -->
+<div id="image-modal-overlay">
+  <img id="image-modal" alt="Zoom image" />
+</div>
+
 <script>
 let questions = [];   // { text, choices[4], correctIndex, image? }
 let roundList = [];
@@ -286,6 +326,11 @@ function shuffleArray(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+/* chuyển mọi chuỗi có ≥3 space liên tiếp thành ___ */
+function normalizeSpaces(txt) {
+  return txt.replace(/ {3,}/g, "___");
 }
 
 /* ---------- bộ đề ---------- */
@@ -492,7 +537,7 @@ function parseQuestions(raw) {
       const ln = lines[i];
       const trimmed = ln.trim();
 
-      // Nếu dòng bắt đầu bằng A./B./C./D. hoặc IMG: hoặc <img> => dừng, phần sau là đáp án / hình
+      // Nếu dòng bắt đầu bằng A./B./C./D. hoặc IMG: hoặc <img> => dừng
       if (trimmed.match(/^(?:[ABCD]\.|IMG\s*:|<img\b)/i)) {
         break;
       }
@@ -534,11 +579,15 @@ function parseQuestions(raw) {
       choicesObj[letter] = text;
     }
 
-    const choiceArr = ["A","B","C","D"].map(ch => (choicesObj[ch]||"").trim());
-    if (!questionText || choiceArr.some(c=>!c)) return;
+    const choiceArrRaw = ["A","B","C","D"].map(ch => (choicesObj[ch]||"").trim());
+    if (!questionText || choiceArrRaw.some(c=>!c)) return;
+
+    // chuẩn hoá 3+ space thành ___
+    const qNorm = normalizeSpaces(questionText);
+    const choiceArr = choiceArrRaw.map(c => normalizeSpaces(c));
 
     parsed.push({
-      text: questionText,
+      text: qNorm,
       choices: choiceArr,
       image: imageUrl || null
     });
@@ -647,6 +696,24 @@ function attachChoiceEvents() {
   });
 }
 
+/* ---- zoom ảnh ---- */
+function attachImageZoomEvents() {
+  const quizImg   = document.getElementById("quiz-image");
+  const overlay   = document.getElementById("image-modal-overlay");
+  const modalImg  = document.getElementById("image-modal");
+
+  quizImg.addEventListener("click", () => {
+    if (!quizImg.src) return;
+    modalImg.src = quizImg.src;
+    overlay.style.display = "flex";
+  });
+
+  overlay.addEventListener("click", () => {
+    overlay.style.display = "none";
+    modalImg.removeAttribute("src");
+  });
+}
+
 function submitAnswer() {
   if (finished) return;
   if (selectedChoice===null) return alert("Hãy chọn một đáp án.");
@@ -709,6 +776,7 @@ function restartQuiz() {
 /* ---------- init ---------- */
 function init() {
   attachChoiceEvents();
+  attachImageZoomEvents();
   refreshSavedSetsUI();
   tryRestoreQuizState();
 }
