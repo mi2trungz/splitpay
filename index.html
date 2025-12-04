@@ -264,6 +264,15 @@ A.appreciate; 3%  B.appreciate; 1%  C.depreciate; 3%  D.appreciate; 2%
     Các bộ đề lưu trong trình duyệt (LocalStorage). Xoá cache trình duyệt thì mất.
   </div>
 
+  <h2>Lịch sử làm bài</h2>
+  <div class="inline-row">
+    <button class="secondary-btn" onclick="exportHistory()">Xuất lịch sử (.json)</button>
+    <button class="danger-btn" onclick="clearHistory()">Xoá lịch sử</button>
+  </div>
+  <div class="small-hint">
+    Lịch sử ghi lại mỗi lần bạn bấm "Trả lời" (câu, lượt, đáp án chọn, đúng/sai...).
+  </div>
+
   <hr style="border-color:#1f2937;margin:18px 0;" />
 
   <button onclick="createQuiz()">Tạo đề &amp; bắt đầu làm bài</button>
@@ -318,9 +327,11 @@ let round = 1;
 let finished = false;
 let selectedChoice = null;
 let shuffleEnabled = false; // có bật xáo trộn không
+let quizHistory = [];       // lịch sử làm bài
 
 const LS_KEY_SETS = "quizSets_v1";          // lưu nhiều bộ đề
 const LS_KEY_STATE = "quizCurrentState_v1"; // lưu trạng thái đang làm
+const LS_KEY_HISTORY = "quizHistory_v1";    // lưu lịch sử làm bài
 
 // ======== HÀM SHUFFLE MẢNG (FISHER-YATES) ========
 function shuffleArray(arr) {
@@ -450,6 +461,80 @@ function deleteSelectedSet() {
   saveSetsToLS(sets);
   refreshSavedSetsUI();
   alert("Đã xoá bộ đề.");
+}
+
+// ======== LỊCH SỬ LÀM BÀI (HISTORY) ========
+function loadHistoryFromLS() {
+  try {
+    const raw = localStorage.getItem(LS_KEY_HISTORY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed;
+  } catch (e) {
+    console.error("Lỗi đọc lịch sử:", e);
+    return [];
+  }
+}
+
+function saveHistoryToLS() {
+  try {
+    localStorage.setItem(LS_KEY_HISTORY, JSON.stringify(quizHistory));
+  } catch (e) {
+    console.error("Lỗi lưu lịch sử:", e);
+  }
+}
+
+function logHistoryAttempt(qIndex, selectedIdx, correctIdx) {
+  if (!questions[qIndex]) return;
+  const choiceLetters = ["A", "B", "C", "D"];
+  const entry = {
+    timestamp: new Date().toISOString(),
+    setName: document.getElementById("setName").value.trim() || null,
+    questionIndex: qIndex,
+    questionText: questions[qIndex].text,
+    round,
+    positionInRound: current + 1,
+    totalInRound: roundList.length,
+    selectedChoiceIndex: selectedIdx,
+    selectedChoiceLetter: choiceLetters[selectedIdx] || null,
+    selectedChoiceText: questions[qIndex].choices[selectedIdx] || null,
+    correctChoiceIndex: correctIdx,
+    correctChoiceLetter: choiceLetters[correctIdx] || null,
+    correctChoiceText: questions[qIndex].choices[correctIdx] || null,
+    isCorrect: selectedIdx === correctIdx
+  };
+  quizHistory.push(entry);
+  saveHistoryToLS();
+}
+
+function exportHistory() {
+  if (!quizHistory || quizHistory.length === 0) {
+    alert("Chưa có lịch sử nào để xuất.");
+    return;
+  }
+  const dataStr = JSON.stringify(quizHistory, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const dateStr = new Date().toISOString().split("T")[0];
+  a.download = `quiz_history_${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function clearHistory() {
+  if (!confirm("Bạn có chắc muốn xoá toàn bộ lịch sử làm bài không?")) return;
+  quizHistory = [];
+  try {
+    localStorage.removeItem(LS_KEY_HISTORY);
+  } catch (e) {
+    console.error("Lỗi xoá lịch sử:", e);
+  }
+  alert("Đã xoá lịch sử làm bài.");
 }
 
 // ======== LƯU / LOAD TRẠNG THÁI QUIZ (B) ========
@@ -703,7 +788,6 @@ function attachChoiceEvents() {
       const idx = Number(card.getAttribute("data-index"));
       selectedChoice = idx;
       updateChoiceSelection();
-      // có thể lưu luôn nếu muốn, nhưng không cần thiết cho B
     });
   });
 }
@@ -732,6 +816,9 @@ function submitAnswer() {
       wrongList.push(qIndex);
     }
   }
+
+  // Ghi vào lịch sử
+  logHistoryAttempt(qIndex, answer, q.correctIndex);
 
   // Lưu lại trạng thái sau khi chấm
   saveCurrentState();
@@ -792,6 +879,7 @@ function restartQuiz() {
 function init() {
   attachChoiceEvents();
   refreshSavedSetsUI();
+  quizHistory = loadHistoryFromLS();
   tryRestoreQuizState(); // thử khôi phục bài đang làm dở
 }
 
