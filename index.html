@@ -1,25 +1,3 @@
-Chuẩn, nhìn screenshot là biết đang bị 2 lỗi:
-
-1. **Không có thẻ `<meta name="viewport"...>`** nên Safari tự zoom nhỏ toàn bộ trang.
-2. Mobile mode mình để chữ hơi nhỏ.
-
-Mình đã sửa cả hai:
-
-* Thêm:
-
-  ```html
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  ```
-* Tăng font & padding khi bật **“Chế độ giao diện điện thoại”**:
-
-  * body ~ 19–20px
-  * input / textarea / đáp án / nút bấm đều to hơn, dễ bấm tay.
-
-Dưới đây là **file HTML hoàn chỉnh mới** (giữ nguyên mọi chức năng cũ: lưu bộ đề, lưu trạng thái, xáo trộn, ảnh + zoom, tô xanh/đỏ, 3 khoảng trắng → `___`, mobile toggle…):
-
-> 👉 Chỉ cần **copy hết, dán đè** file hiện tại.
-
-```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -915,6 +893,3 @@ document.addEventListener("DOMContentLoaded", init);
 
 </body>
 </html>
-```
-
-Bạn deploy lại rồi mở trên điện thoại, bật **“Chế độ giao diện điện thoại: Bật”**, nếu vẫn thấy nhỏ quá mình có thể tăng font thêm nữa (ví dụ 21–22px).
