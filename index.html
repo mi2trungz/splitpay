@@ -37,7 +37,8 @@
     }
 
     textarea,
-    input {
+    input,
+    select {
       width: 100%;
       padding: 8px;
       margin-top: 6px;
@@ -52,7 +53,8 @@
     }
 
     textarea:focus,
-    input:focus {
+    input:focus,
+    select:focus {
       border-color: #6366f1; /* indigo-500 */
       box-shadow: 0 0 0 1px #6366f1;
     }
@@ -98,6 +100,29 @@
       background: #111827;
       color: #e5e7eb;
       box-shadow: 0 4px 12px rgba(15,23,42,0.7);
+    }
+
+    .danger-btn {
+      background: #b91c1c;
+      box-shadow: 0 4px 12px rgba(185,28,28,0.6);
+    }
+
+    .inline-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .inline-row > * {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .inline-row button {
+      flex: 0 0 auto;
+      margin-top: 0;
+      margin-bottom: 0;
     }
 
     .question-card {
@@ -185,10 +210,18 @@
     #status.err {
       color: #fb7185; /* rose-400 */
     }
+
+    .small-hint {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: -6px;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
 
+<!-- ====== NHẬP ĐỀ + LƯU BỘ ĐỀ ====== -->
 <div class="box">
   <h2>Bước 1: Dán đề</h2>
   <p><strong>Format ví dụ:</strong></p>
@@ -212,9 +245,31 @@ A.appreciate; 3%  B.appreciate; 1%  C.depreciate; 3%  D.appreciate; 2%
   </p>
   <input id="answerKey" placeholder="Ví dụ: ABDCDAB..." />
 
+  <h2>Bước 3: Đặt tên & lưu bộ đề</h2>
+  <div class="small-hint">
+    Ví dụ: <em>“Chương 3 - IFE”</em>, <em>“Đề cũ 2024 - IRP/PPP”</em>...
+  </div>
+  <div class="inline-row" style="margin-bottom: 12px;">
+    <input id="setName" placeholder="Tên bộ đề..." />
+    <button onclick="saveCurrentSet()">Lưu bộ đề</button>
+  </div>
+
+  <h2>Bộ đề đã lưu</h2>
+  <div class="inline-row">
+    <select id="savedSetsSelect"></select>
+    <button onclick="loadSelectedSet()">Tải bộ đề</button>
+    <button class="danger-btn" onclick="deleteSelectedSet()">Xoá bộ đề</button>
+  </div>
+  <div class="small-hint">
+    Các bộ đề lưu trong trình duyệt (LocalStorage). Xoá cache trình duyệt thì mất.
+  </div>
+
+  <hr style="border-color:#1f2937;margin:18px 0;" />
+
   <button onclick="createQuiz()">Tạo đề &amp; bắt đầu làm bài</button>
 </div>
 
+<!-- ====== VÙNG LÀM QUIZ ====== -->
 <div class="question-card" id="quiz-box" style="display:none;">
   <div id="progress"></div>
   <h2 id="quiz-title">Câu hỏi</h2>
@@ -256,13 +311,15 @@ A.appreciate; 3%  B.appreciate; 1%  C.depreciate; 3%  D.appreciate; 2%
 
 <script>
 let questions = [];   // { text, choices[4], correctIndex }
-let roundList = [];   // index câu trong lượt hiện tại
+let roundList = [];   // index câu trong lượt hiện tại (là index trong mảng questions)
 let wrongList = [];   // index câu sai dùng cho lượt sau
 let current = 0;
 let round = 1;
 let finished = false;
 let selectedChoice = null;
 let shuffleEnabled = false; // có bật xáo trộn không
+
+const LS_KEY = "quizSets_v1"; // key lưu bộ đề trong LocalStorage
 
 // ======== HÀM SHUFFLE MẢNG (FISHER-YATES) ========
 function shuffleArray(arr) {
@@ -272,6 +329,126 @@ function shuffleArray(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+// ======== HÀM LƯU/LOAD BỘ ĐỀ TỪ LOCALSTORAGE ========
+function getSavedSets() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed;
+  } catch (e) {
+    console.error("Lỗi đọc LocalStorage:", e);
+    return [];
+  }
+}
+
+function saveSetsToLS(sets) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(sets));
+  } catch (e) {
+    console.error("Lỗi lưu LocalStorage:", e);
+  }
+}
+
+function refreshSavedSetsUI() {
+  const select = document.getElementById("savedSetsSelect");
+  const sets = getSavedSets();
+  select.innerHTML = "";
+  if (sets.length === 0) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "Chưa có bộ đề nào được lưu";
+    select.appendChild(opt);
+    select.disabled = true;
+    return;
+  }
+  select.disabled = false;
+  sets.forEach((set, idx) => {
+    const opt = document.createElement("option");
+    opt.value = idx;
+    opt.textContent = set.name;
+    select.appendChild(opt);
+  });
+}
+
+function saveCurrentSet() {
+  const name = document.getElementById("setName").value.trim();
+  const raw = document.getElementById("rawQuestions").value.trim();
+  const keyInput = document.getElementById("answerKey").value
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
+
+  if (!name) {
+    alert("Bạn chưa nhập tên bộ đề.");
+    return;
+  }
+  if (!raw) {
+    alert("Bạn chưa dán đề vào.");
+    return;
+  }
+  if (!keyInput) {
+    alert("Bạn chưa nhập chuỗi đáp án.");
+    return;
+  }
+
+  const sets = getSavedSets();
+  const existingIndex = sets.findIndex(s => s.name === name);
+
+  const data = {
+    name,
+    rawQuestions: raw,
+    answerKey: keyInput
+  };
+
+  if (existingIndex >= 0) {
+    if (confirm("Đã có bộ đề trùng tên. Bạn có muốn ghi đè không?")) {
+      sets[existingIndex] = data;
+    } else {
+      return;
+    }
+  } else {
+    sets.push(data);
+  }
+
+  saveSetsToLS(sets);
+  refreshSavedSetsUI();
+  alert("Đã lưu bộ đề \"" + name + "\".");
+}
+
+function loadSelectedSet() {
+  const select = document.getElementById("savedSetsSelect");
+  const idx = parseInt(select.value, 10);
+  const sets = getSavedSets();
+  if (isNaN(idx) || !sets[idx]) {
+    alert("Không có bộ đề hợp lệ để tải.");
+    return;
+  }
+  const set = sets[idx];
+  document.getElementById("setName").value = set.name;
+  document.getElementById("rawQuestions").value = set.rawQuestions;
+  document.getElementById("answerKey").value = set.answerKey;
+  alert("Đã tải bộ đề: " + set.name);
+}
+
+function deleteSelectedSet() {
+  const select = document.getElementById("savedSetsSelect");
+  const idx = parseInt(select.value, 10);
+  const sets = getSavedSets();
+  if (isNaN(idx) || !sets[idx]) {
+    alert("Không có bộ đề hợp lệ để xoá.");
+    return;
+  }
+  if (!confirm('Bạn có chắc muốn xoá bộ đề "' + sets[idx].name + '"?')) {
+    return;
+  }
+  sets.splice(idx, 1);
+  saveSetsToLS(sets);
+  refreshSavedSetsUI();
+  alert("Đã xoá bộ đề.");
 }
 
 // ==================== PARSE ĐỀ TỪ TEXT ====================
@@ -395,9 +572,7 @@ function startQuiz() {
     alert("Chưa có câu hỏi.");
     return;
   }
-  // Tạo list index 0..n-1
   let indices = questions.map((_, i) => i);
-  // Nếu bật shuffle → xáo trộn
   if (shuffleEnabled) {
     indices = shuffleArray(indices);
   }
@@ -499,7 +674,6 @@ function nextQuestion() {
     if (wrongList.length > 0) {
       round++;
 
-      // Với lựa chọn C: xáo trộn cả lượt sau nếu user chọn shuffle
       let nextRound = [...wrongList];
       wrongList = [];
       if (shuffleEnabled) {
@@ -536,8 +710,13 @@ function restartQuiz() {
   renderQuestion();
 }
 
-// Gắn sự kiện cho block đáp án
-attachChoiceEvents();
+// ====== INIT ======
+function init() {
+  attachChoiceEvents();
+  refreshSavedSetsUI();
+}
+
+document.addEventListener("DOMContentLoaded", init);
 </script>
 
 </body>
