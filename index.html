@@ -4,65 +4,44 @@
   <meta charset="UTF-8" />
   <title>Quiz luyện câu sai (dán đề + đáp án)</title>
   <style>
-    :root {
-      color-scheme: dark;
-    }
-
+    :root { color-scheme: dark; }
     body {
       font-family: Arial, sans-serif;
-      background: #020617; /* slate-950 */
+      background: #020617;
       padding: 20px;
-      color: #e5e7eb; /* gray-200 */
+      color: #e5e7eb;
     }
-
     .box {
       background: #020617;
       padding: 20px;
       margin-bottom: 20px;
       border-radius: 14px;
       box-shadow: 0 10px 30px rgba(15,23,42,0.8);
-      border: 1px solid #1f2937; /* gray-800 */
+      border: 1px solid #1f2937;
       max-width: 1100px;
-      margin-left: auto;
-      margin-right: auto;
+      margin: 0 auto 20px auto;
     }
+    h2 { margin-top: 0; color: #e5e7eb; }
+    p { color: #9ca3af; }
 
-    h2 {
-      margin-top: 0;
-      color: #e5e7eb;
-    }
-
-    p {
-      color: #9ca3af; /* gray-400 */
-    }
-
-    textarea,
-    input,
-    select {
+    textarea, input, select {
       width: 100%;
       padding: 8px;
       margin-top: 6px;
       margin-bottom: 12px;
       border-radius: 8px;
-      border: 1px solid #374151; /* gray-700 */
+      border: 1px solid #374151;
       font-family: inherit;
       background: #020617;
       color: #e5e7eb;
       outline: none;
       box-shadow: inset 0 0 0 1px rgba(15,23,42,0.6);
     }
-
-    textarea:focus,
-    input:focus,
-    select:focus {
-      border-color: #6366f1; /* indigo-500 */
+    textarea:focus, input:focus, select:focus {
+      border-color: #6366f1;
       box-shadow: 0 0 0 1px #6366f1;
     }
-
-    textarea {
-      min-height: 180px;
-      resize: vertical;
-    }
+    textarea { min-height: 180px; resize: vertical; }
 
     pre {
       background: #020617;
@@ -77,7 +56,7 @@
       padding: 10px 18px;
       border: none;
       border-radius: 999px;
-      background: #6366f1; /* indigo-500 */
+      background: #6366f1;
       color: white;
       cursor: pointer;
       font-weight: bold;
@@ -85,23 +64,19 @@
       box-shadow: 0 8px 20px rgba(99,102,241,0.4);
       transition: transform 0.08s, box-shadow 0.08s, opacity 0.15s;
     }
-
     button:hover {
       opacity: 0.95;
       box-shadow: 0 10px 26px rgba(99,102,241,0.5);
     }
-
     button:active {
       transform: translateY(1px);
       box-shadow: 0 6px 18px rgba(99,102,241,0.4);
     }
-
     .secondary-btn {
       background: #111827;
       color: #e5e7eb;
       box-shadow: 0 4px 12px rgba(15,23,42,0.7);
     }
-
     .danger-btn {
       background: #b91c1c;
       box-shadow: 0 4px 12px rgba(185,28,28,0.6);
@@ -113,51 +88,25 @@
       align-items: center;
       flex-wrap: wrap;
     }
-
-    .inline-row > * {
-      flex: 1;
-      min-width: 120px;
-    }
-
-    .inline-row button {
-      flex: 0 0 auto;
-      margin-top: 0;
-      margin-bottom: 0;
-    }
+    .inline-row > * { flex: 1; min-width: 120px; }
+    .inline-row button { flex: 0 0 auto; margin: 0; }
 
     .question-card {
       padding: 20px;
       background: #020617;
       border-radius: 14px;
       box-shadow: 0 10px 30px rgba(15,23,42,0.9);
-      margin-top: 10px;
       border: 1px solid #1f2937;
       max-width: 1100px;
-      margin-left: auto;
-      margin-right: auto;
+      margin: 10px auto 0 auto;
     }
 
-    #progress {
-      margin-bottom: 8px;
-      font-size: 14px;
-      color: #9ca3af;
-    }
+    #progress { margin-bottom: 8px; font-size: 14px; color: #9ca3af; }
+    #quiz-title { font-size: 18px; margin-bottom: 6px; }
+    #quiz-text { color: #d1d5db; margin-bottom: 12px; }
 
-    #quiz-title {
-      font-size: 18px;
-      margin-bottom: 6px;
-    }
-
-    #quiz-text {
-      color: #d1d5db;
-      margin-bottom: 12px;
-    }
-
-    /* ====== BLOCK ANSWER STYLE ====== */
-    .choice-row {
-      margin-bottom: 10px;
-    }
-
+    /* Block answer style */
+    .choice-row { margin-bottom: 10px; }
     .choice-card {
       width: 100%;
       display: flex;
@@ -172,44 +121,27 @@
                   box-shadow 0.12s, transform 0.05s;
       text-align: left;
     }
-
     .choice-card:hover {
       border-color: #4f46e5;
-      background: #020617;
       box-shadow: 0 0 0 1px rgba(79,70,229,0.5);
     }
-
     .choice-card.selected {
       border-color: #6366f1;
       background: #111827;
       box-shadow: 0 0 0 1px rgba(99,102,241,0.8);
       transform: translateY(-1px);
     }
-
     .choice-prefix {
       font-weight: 600;
       color: #9ca3af;
       flex-shrink: 0;
       min-width: 20px;
     }
+    .choice-text { color: #e5e7eb; white-space: normal; }
 
-    .choice-text {
-      color: #e5e7eb;
-      white-space: normal;
-    }
-
-    #status {
-      margin-top: 12px;
-      font-weight: bold;
-    }
-
-    #status.ok {
-      color: #4ade80; /* green-400 */
-    }
-
-    #status.err {
-      color: #fb7185; /* rose-400 */
-    }
+    #status { margin-top: 12px; font-weight: bold; }
+    #status.ok { color: #4ade80; }
+    #status.err { color: #fb7185; }
 
     .small-hint {
       font-size: 12px;
@@ -221,18 +153,17 @@
 </head>
 <body>
 
-<!-- ====== NHẬP ĐỀ + LƯU BỘ ĐỀ ====== -->
 <div class="box">
   <h2>Bước 1: Dán đề</h2>
   <p><strong>Format ví dụ:</strong></p>
   <pre>
-Câu 14: Assume that U.S. and British investors require a real return of 2%. If the nominal U.S. interest rate is 15%, and the nominal British rate is 13%, then according to the IFE, the British inflation rate is expected to be about the U.S. inflation rate, and the British pound is expected to .
+Câu 14: Assume that U.S. and British investors require a real return of 2%...
 A.2 percentage points above; depreciate by about 2%
 B.3 percentage points above; depreciate by about 3%
 C.3 percentage points below; appreciate by about 3%
 D.2 percentage points below; appreciate by about 2%
 
-Câu 15: Assume U.S. and Swiss investors require a real rate of return of 3%. Assume the nominal U.S. interest rate is 6% and the nominal Swiss rate is 4%. According to the international Fisher effect, the franc will by about .
+Câu 15: Assume U.S. and Swiss investors require a real rate of return of 3%...
 A.appreciate; 3%  B.appreciate; 1%  C.depreciate; 3%  D.appreciate; 2%
   </pre>
 
@@ -269,23 +200,11 @@ A.appreciate; 3%  B.appreciate; 1%  C.depreciate; 3%  D.appreciate; 2%
     Bộ đề được lưu trong LocalStorage. Bạn có thể xuất ra file JSON để backup, rồi tải lên lại khi đổi máy hoặc trình duyệt.
   </div>
 
-  <h2>Lịch sử làm bài</h2>
-  <div class="inline-row">
-    <button class="secondary-btn" onclick="exportHistory()">Xuất lịch sử (.json)</button>
-    <button onclick="triggerImportHistory()">Tải lịch sử từ file</button>
-    <button class="danger-btn" onclick="clearHistory()">Xoá lịch sử</button>
-  </div>
-  <input type="file" id="historyFileInput" accept="application/json" style="display:none" onchange="importHistoryFromFile(event)" />
-  <div class="small-hint">
-    Lịch sử ghi lại mỗi lần bạn bấm "Trả lời" (câu, lượt, đáp án chọn, đúng/sai...).
-  </div>
-
   <hr style="border-color:#1f2937;margin:18px 0;" />
 
   <button onclick="createQuiz()">Tạo đề &amp; bắt đầu làm bài</button>
 </div>
 
-<!-- ====== VÙNG LÀM QUIZ ====== -->
 <div class="question-card" id="quiz-box" style="display:none;">
   <div id="progress"></div>
   <h2 id="quiz-title">Câu hỏi</h2>
@@ -297,21 +216,18 @@ A.appreciate; 3%  B.appreciate; 1%  C.depreciate; 3%  D.appreciate; 2%
       <span class="choice-text" id="c1"></span>
     </div>
   </div>
-
   <div class="choice-row">
     <div class="choice-card" data-index="1">
       <span class="choice-prefix">B.</span>
       <span class="choice-text" id="c2"></span>
     </div>
   </div>
-
   <div class="choice-row">
     <div class="choice-card" data-index="2">
       <span class="choice-prefix">C.</span>
       <span class="choice-text" id="c3"></span>
     </div>
   </div>
-
   <div class="choice-row">
     <div class="choice-card" data-index="3">
       <span class="choice-prefix">D.</span>
@@ -327,20 +243,18 @@ A.appreciate; 3%  B.appreciate; 1%  C.depreciate; 3%  D.appreciate; 2%
 
 <script>
 let questions = [];   // { text, choices[4], correctIndex }
-let roundList = [];   // index câu trong lượt hiện tại (theo mảng questions)
-let wrongList = [];   // index câu sai dùng cho lượt sau
+let roundList = [];   // index câu trong lượt hiện tại
+let wrongList = [];   // index câu sai cho lượt kế
 let current = 0;
 let round = 1;
 let finished = false;
 let selectedChoice = null;
-let shuffleEnabled = false; // có bật xáo trộn không
-let quizHistory = [];       // lịch sử làm bài
+let shuffleEnabled = false;
 
-const LS_KEY_SETS = "quizSets_v1";          // lưu nhiều bộ đề
-const LS_KEY_STATE = "quizCurrentState_v1"; // lưu trạng thái đang làm
-const LS_KEY_HISTORY = "quizHistory_v1";    // lưu lịch sử làm bài
+const LS_KEY_SETS  = "quizSets_v1";
+const LS_KEY_STATE = "quizCurrentState_v1";
 
-// ======== HÀM SHUFFLE MẢNG (FISHER-YATES) ========
+/* ---------- tiện ích ---------- */
 function shuffleArray(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -350,33 +264,24 @@ function shuffleArray(arr) {
   return a;
 }
 
-// ======== LƯU / LOAD BỘ ĐỀ TỪ LOCALSTORAGE ========
+/* ---------- bộ đề (LocalStorage) ---------- */
 function getSavedSets() {
   try {
     const raw = localStorage.getItem(LS_KEY_SETS);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed;
-  } catch (e) {
-    console.error("Lỗi đọc LocalStorage:", e);
-    return [];
-  }
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
 }
-
 function saveSetsToLS(sets) {
-  try {
-    localStorage.setItem(LS_KEY_SETS, JSON.stringify(sets));
-  } catch (e) {
-    console.error("Lỗi lưu LocalStorage:", e);
-  }
+  try { localStorage.setItem(LS_KEY_SETS, JSON.stringify(sets)); }
+  catch {}
 }
-
 function refreshSavedSetsUI() {
   const select = document.getElementById("savedSetsSelect");
   const sets = getSavedSets();
   select.innerHTML = "";
-  if (sets.length === 0) {
+  if (!sets.length) {
     const opt = document.createElement("option");
     opt.value = "";
     opt.textContent = "Chưa có bộ đề nào được lưu";
@@ -395,251 +300,94 @@ function refreshSavedSetsUI() {
 
 function saveCurrentSet() {
   const name = document.getElementById("setName").value.trim();
-  const raw = document.getElementById("rawQuestions").value.trim();
+  const raw  = document.getElementById("rawQuestions").value.trim();
   const keyInput = document.getElementById("answerKey").value
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, "");
-
-  if (!name) {
-    alert("Bạn chưa nhập tên bộ đề.");
-    return;
-  }
-  if (!raw) {
-    alert("Bạn chưa dán đề vào.");
-    return;
-  }
-  if (!keyInput) {
-    alert("Bạn chưa nhập chuỗi đáp án.");
-    return;
-  }
+                    .trim().toUpperCase().replace(/\s+/g,"");
+  if (!name)    return alert("Bạn chưa nhập tên bộ đề.");
+  if (!raw)     return alert("Bạn chưa dán đề vào.");
+  if (!keyInput)return alert("Bạn chưa nhập chuỗi đáp án.");
 
   const sets = getSavedSets();
-  const existingIndex = sets.findIndex(s => s.name === name);
+  const idx  = sets.findIndex(s => s.name === name);
+  const data = { name, rawQuestions: raw, answerKey: keyInput };
 
-  const data = {
-    name,
-    rawQuestions: raw,
-    answerKey: keyInput
-  };
-
-  if (existingIndex >= 0) {
-    if (confirm("Đã có bộ đề trùng tên. Bạn có muốn ghi đè không?")) {
-      sets[existingIndex] = data;
-    } else {
-      return;
-    }
-  } else {
-    sets.push(data);
-  }
+  if (idx >= 0) {
+    if (!confirm("Đã có bộ đề trùng tên. Ghi đè?")) return;
+    sets[idx] = data;
+  } else sets.push(data);
 
   saveSetsToLS(sets);
   refreshSavedSetsUI();
-  alert("Đã lưu bộ đề \"" + name + "\".");
+  alert('Đã lưu bộ đề "'+name+'".');
 }
 
 function loadSelectedSet() {
   const select = document.getElementById("savedSetsSelect");
-  const idx = parseInt(select.value, 10);
+  const idx = parseInt(select.value,10);
   const sets = getSavedSets();
-  if (isNaN(idx) || !sets[idx]) {
-    alert("Không có bộ đề hợp lệ để tải.");
-    return;
-  }
+  if (isNaN(idx) || !sets[idx]) return alert("Không có bộ đề hợp lệ để tải.");
   const set = sets[idx];
-  document.getElementById("setName").value = set.name;
+  document.getElementById("setName").value      = set.name;
   document.getElementById("rawQuestions").value = set.rawQuestions;
-  document.getElementById("answerKey").value = set.answerKey;
-  alert("Đã tải bộ đề: " + set.name);
+  document.getElementById("answerKey").value    = set.answerKey;
+  alert("Đã tải bộ đề: "+set.name);
 }
 
 function deleteSelectedSet() {
   const select = document.getElementById("savedSetsSelect");
-  const idx = parseInt(select.value, 10);
+  const idx = parseInt(select.value,10);
   const sets = getSavedSets();
-  if (isNaN(idx) || !sets[idx]) {
-    alert("Không có bộ đề hợp lệ để xoá.");
-    return;
-  }
-  if (!confirm('Bạn có chắc muốn xoá bộ đề "' + sets[idx].name + '"?')) {
-    return;
-  }
-  sets.splice(idx, 1);
+  if (isNaN(idx) || !sets[idx]) return alert("Không có bộ đề hợp lệ để xoá.");
+  if (!confirm('Xoá bộ đề "'+sets[idx].name+'"?')) return;
+  sets.splice(idx,1);
   saveSetsToLS(sets);
   refreshSavedSetsUI();
   alert("Đã xoá bộ đề.");
 }
 
-// ======== EXPORT / IMPORT BỘ ĐỀ (.JSON) ========
+/* --- export / import bộ đề --- */
 function exportSets() {
   const sets = getSavedSets();
-  if (!sets.length) {
-    alert("Chưa có bộ đề nào để xuất.");
-    return;
-  }
-  const dataStr = JSON.stringify(sets, null, 2);
-  const blob = new Blob([dataStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const dateStr = new Date().toISOString().split("T")[0];
+  if (!sets.length) return alert("Chưa có bộ đề nào để xuất.");
+  const blob = new Blob([JSON.stringify(sets,null,2)],{type:"application/json"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
   a.href = url;
-  a.download = `quiz_sets_${dateStr}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  a.download = "quiz_sets_"+new Date().toISOString().split("T")[0]+".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-
 function triggerImportSets() {
-  const input = document.getElementById("setsFileInput");
-  input.click();
+  document.getElementById("setsFileInput").click();
 }
-
-function importSetsFromFile(event) {
-  const file = event.target.files[0];
+function importSetsFromFile(ev) {
+  const file = ev.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      if (!Array.isArray(data)) {
-        alert("File bộ đề không đúng định dạng (phải là mảng JSON).");
-        return;
-      }
-      let currentSets = getSavedSets();
-      data.forEach(newSet => {
-        if (!newSet || typeof newSet !== "object") return;
-        if (!newSet.name || !newSet.rawQuestions || !newSet.answerKey) return;
-        const idx = currentSets.findIndex(s => s.name === newSet.name);
-        if (idx >= 0) {
-          // tên trùng -> ghi đè
-          currentSets[idx] = newSet;
-        } else {
-          currentSets.push(newSet);
-        }
+      if (!Array.isArray(data)) return alert("File không đúng định dạng (phải là mảng JSON).");
+      let cur = getSavedSets();
+      data.forEach(ns => {
+        if (!ns || typeof ns!=="object") return;
+        if (!ns.name || !ns.rawQuestions || !ns.answerKey) return;
+        const i = cur.findIndex(s=>s.name===ns.name);
+        if (i>=0) cur[i]=ns; else cur.push(ns);
       });
-      saveSetsToLS(currentSets);
+      saveSetsToLS(cur);
       refreshSavedSetsUI();
-      alert("Đã import bộ đề từ file. Tổng số bộ đề hiện có: " + currentSets.length);
-    } catch (err) {
-      console.error(err);
+      alert("Đã import bộ đề. Tổng số bộ đề: "+cur.length);
+    } catch {
       alert("Không đọc được file JSON bộ đề.");
-    } finally {
-      event.target.value = "";
-    }
+    } finally { ev.target.value=""; }
   };
   reader.readAsText(file);
 }
 
-// ======== LỊCH SỬ LÀM BÀI (HISTORY) ========
-function loadHistoryFromLS() {
-  try {
-    const raw = localStorage.getItem(LS_KEY_HISTORY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed;
-  } catch (e) {
-    console.error("Lỗi đọc lịch sử:", e);
-    return [];
-  }
-}
-
-function saveHistoryToLS() {
-  try {
-    localStorage.setItem(LS_KEY_HISTORY, JSON.stringify(quizHistory));
-  } catch (e) {
-    console.error("Lỗi lưu lịch sử:", e);
-  }
-}
-
-function logHistoryAttempt(qIndex, selectedIdx, correctIdx) {
-  if (!questions[qIndex]) return;
-  const choiceLetters = ["A", "B", "C", "D"];
-  const entry = {
-    timestamp: new Date().toISOString(),
-    setName: document.getElementById("setName").value.trim() || null,
-    questionIndex: qIndex,
-    questionText: questions[qIndex].text,
-    round,
-    positionInRound: current + 1,
-    totalInRound: roundList.length,
-    selectedChoiceIndex: selectedIdx,
-    selectedChoiceLetter: choiceLetters[selectedIdx] || null,
-    selectedChoiceText: questions[qIndex].choices[selectedIdx] || null,
-    correctChoiceIndex: correctIdx,
-    correctChoiceLetter: choiceLetters[correctIdx] || null,
-    correctChoiceText: questions[qIndex].choices[correctIdx] || null,
-    isCorrect: selectedIdx === correctIdx
-  };
-  quizHistory.push(entry);
-  saveHistoryToLS();
-}
-
-function exportHistory() {
-  if (!quizHistory || quizHistory.length === 0) {
-    alert("Chưa có lịch sử nào để xuất.");
-    return;
-  }
-  const dataStr = JSON.stringify(quizHistory, null, 2);
-  const blob = new Blob([dataStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  const dateStr = new Date().toISOString().split("T")[0];
-  a.download = `quiz_history_${dateStr}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function triggerImportHistory() {
-  const input = document.getElementById("historyFileInput");
-  input.click();
-}
-
-function importHistoryFromFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (!Array.isArray(data)) {
-        alert("File không đúng định dạng lịch sử (phải là mảng JSON).");
-        return;
-      }
-      quizHistory = data;
-      saveHistoryToLS();
-      alert("Đã nhập " + data.length + " bản ghi lịch sử từ file.");
-    } catch (err) {
-      console.error(err);
-      alert("Không đọc được file JSON lịch sử.");
-    } finally {
-      event.target.value = ""; // reset input
-    }
-  };
-  reader.readAsText(file);
-}
-
-function clearHistory() {
-  if (!confirm("Bạn có chắc muốn xoá toàn bộ lịch sử làm bài không?")) return;
-  quizHistory = [];
-  try {
-    localStorage.removeItem(LS_KEY_HISTORY);
-  } catch (e) {
-    console.error("Lỗi xoá lịch sử:", e);
-  }
-  alert("Đã xoá lịch sử làm bài.");
-}
-
-// ======== LƯU / LOAD TRẠNG THÁI QUIZ ========
+/* ---------- lưu / khôi phục trạng thái quiz ---------- */
 function saveCurrentState() {
-  if (!questions || questions.length === 0) {
-    localStorage.removeItem(LS_KEY_STATE);
-    return;
-  }
+  if (!questions.length) { localStorage.removeItem(LS_KEY_STATE); return; }
   const state = {
     rawQuestions: document.getElementById("rawQuestions").value.trim(),
     answerKey: document.getElementById("answerKey").value.trim().toUpperCase().replace(/\s+/g,""),
@@ -652,11 +400,7 @@ function saveCurrentState() {
     wrongList,
     finished
   };
-  try {
-    localStorage.setItem(LS_KEY_STATE, JSON.stringify(state));
-  } catch (e) {
-    console.error("Lỗi lưu trạng thái quiz:", e);
-  }
+  try { localStorage.setItem(LS_KEY_STATE, JSON.stringify(state)); } catch {}
 }
 
 function tryRestoreQuizState() {
@@ -664,306 +408,197 @@ function tryRestoreQuizState() {
     const raw = localStorage.getItem(LS_KEY_STATE);
     if (!raw) return;
     const state = JSON.parse(raw);
-    if (!state || !Array.isArray(state.questions) || state.questions.length === 0) return;
+    if (!state || !Array.isArray(state.questions) || !state.questions.length) return;
 
-    const setLabel = state.setName ? ('"'+state.setName+'"') : "(chưa đặt tên)";
-    const ok = confirm(
-      `Phát hiện bạn có bài đang làm dở cho bộ đề ${setLabel}.\nBạn có muốn tiếp tục không?`
-    );
-    if (!ok) return;
+    const label = state.setName ? '"'+state.setName+'"' : "(chưa đặt tên)";
+    if (!confirm(`Phát hiện bạn có bài đang làm dở cho bộ đề ${label}.\nBạn có muốn tiếp tục không?`)) return;
 
-    // Khôi phục input
-    if (state.rawQuestions) {
-      document.getElementById("rawQuestions").value = state.rawQuestions;
-    }
-    if (state.answerKey) {
-      document.getElementById("answerKey").value = state.answerKey;
-    }
-    if (state.setName) {
-      document.getElementById("setName").value = state.setName;
-    }
+    if (state.rawQuestions) document.getElementById("rawQuestions").value = state.rawQuestions;
+    if (state.answerKey)    document.getElementById("answerKey").value    = state.answerKey;
+    if (state.setName)      document.getElementById("setName").value      = state.setName;
 
-    questions = state.questions;
-    shuffleEnabled = !!state.shuffleEnabled;
-    round = state.round || 1;
-    current = state.current || 0;
-    roundList = Array.isArray(state.roundList) && state.roundList.length
-      ? state.roundList
-      : questions.map((_,i)=>i);
-    wrongList = Array.isArray(state.wrongList) ? state.wrongList : [];
-    finished = !!state.finished;
+    questions       = state.questions;
+    shuffleEnabled  = !!state.shuffleEnabled;
+    round           = state.round   || 1;
+    current         = state.current || 0;
+    roundList       = Array.isArray(state.roundList) && state.roundList.length
+                      ? state.roundList : questions.map((_,i)=>i);
+    wrongList       = Array.isArray(state.wrongList) ? state.wrongList : [];
+    finished        = !!state.finished;
 
     document.getElementById("quiz-box").style.display = "block";
-    renderQuestion(); // render sẽ gọi saveCurrentState() lại
-  } catch (e) {
-    console.error("Lỗi khôi phục trạng thái quiz:", e);
-  }
+    renderQuestion();
+  } catch {}
 }
 
-// ==================== PARSE ĐỀ TỪ TEXT ====================
+/* ---------- parse đề ---------- */
 function parseQuestions(raw) {
-  // Tách thành từng block bắt đầu bằng "Câu xx:"
   const blocks = raw
     .split(/(?=Câu\s*\d+\s*:)/g)
-    .map(b => b.trim())
-    .filter(b => b.length > 0);
+    .map(b=>b.trim())
+    .filter(b=>b.length>0);
 
   const parsed = [];
-
-  blocks.forEach((block, idx) => {
-    // Tìm dòng câu hỏi (Câu xx: ...)
+  blocks.forEach((block,idx)=>{
     const qMatch = block.match(/^Câu\s*\d+\s*:.*$/m);
-    if (!qMatch) {
-      console.warn("Không tìm được dòng câu hỏi trong block", idx + 1, block);
-      return;
-    }
-
+    if (!qMatch) return;
     const questionText = qMatch[0].trim();
-    const afterQuestion = block.slice(qMatch.index + qMatch[0].length).trim();
+    const after = block.slice(qMatch.index + qMatch[0].length).trim();
 
-    // Gom A./B./C./D. kể cả khi nằm chung 1 dòng
-    const choicesObj = { A: "", B: "", C: "", D: "" };
-    const choiceRegex = /([ABCD])\.(.*?)(?=(?:[ABCD]\.|$))/gs;
+    const choicesObj = {A:"",B:"",C:"",D:""};
+    const re = /([ABCD])\.(.*?)(?=(?:[ABCD]\.|$))/gs;
     let m;
-    while ((m = choiceRegex.exec(afterQuestion)) !== null) {
-      const letter = m[1]; // A/B/C/D
-      const text = m[2].replace(/\s+/g, " ").trim();
+    while ((m=re.exec(after))!==null) {
+      const letter = m[1];
+      const text   = m[2].replace(/\s+/g," ").trim();
       choicesObj[letter] = text;
     }
-
-    const choiceArray = ["A", "B", "C", "D"].map(ch => (choicesObj[ch] || "").trim());
-
-    if (!questionText || choiceArray.some(c => c.length === 0)) {
-      console.warn("Block", idx + 1, "không hợp lệ (thiếu A/B/C/D), sẽ bỏ qua:", block);
-      return;
-    }
-
-    parsed.push({
-      text: questionText,
-      choices: choiceArray
-    });
+    const choiceArr = ["A","B","C","D"].map(ch => (choicesObj[ch]||"").trim());
+    if (!questionText || choiceArr.some(c=>!c)) return;
+    parsed.push({ text: questionText, choices: choiceArr });
   });
-
   return parsed;
 }
 
-// ==================== TẠO ĐỀ TỪ TEXT + ĐÁP ÁN ====================
+/* ---------- tạo đề từ text + đáp án ---------- */
 function createQuiz() {
   const raw = document.getElementById("rawQuestions").value.trim();
-  const keyInput = document.getElementById("answerKey").value
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, "");
+  const key = document.getElementById("answerKey").value
+                .trim().toUpperCase().replace(/\s+/g,"");
+  if (!raw) return alert("Bạn chưa dán đề.");
+  if (!key) return alert("Bạn chưa nhập chuỗi đáp án.");
 
-  if (!raw) {
-    alert("Bạn chưa dán đề.");
-    return;
-  }
-  if (!keyInput) {
-    alert("Bạn chưa nhập chuỗi đáp án.");
-    return;
-  }
+  const parsed = parseQuestions(raw);
+  if (!parsed.length)
+    return alert("Không parse được câu hỏi nào. Kiểm tra lại format 'Câu xx:' và A./B./C./D.");
 
-  let parsedQuestions = parseQuestions(raw);
+  if (key.length !== parsed.length)
+    return alert("Số ký tự trong đáp án ("+key.length+") khác số câu hỏi ("+parsed.length+").");
 
-  if (parsedQuestions.length === 0) {
-    alert("Không parse được câu hỏi nào. Kiểm tra lại format 'Câu xx:' và A./B./C./D.");
-    return;
-  }
+  shuffleEnabled = confirm("Bạn có muốn xáo trộn thứ tự câu hỏi không?\nOK = Có, Cancel = Không.");
 
-  if (keyInput.length !== parsedQuestions.length) {
-    alert(
-      "Số ký tự trong chuỗi đáp án (" +
-        keyInput.length +
-        ") không khớp với số câu hỏi parse được (" +
-        parsedQuestions.length +
-        ")."
-    );
-    return;
-  }
-
-  // HỎI NGƯỜI DÙNG CÓ MUỐN XÁO TRỘN KHÔNG
-  const userWantsShuffle = confirm(
-    "Bạn có muốn xáo trộn thứ tự câu hỏi không?\nOK = Có, Cancel = Không."
-  );
-  shuffleEnabled = userWantsShuffle;
-
-  const letterToIndex = { A: 0, B: 1, C: 2, D: 3 };
-  const tempQuestions = [];
-
-  for (let i = 0; i < parsedQuestions.length; i++) {
-    const ansLetter = keyInput[i];
-    const idx = letterToIndex[ansLetter];
-    if (idx === undefined) {
-      alert(
-        "Ký tự đáp án không hợp lệ tại vị trí " +
-          (i + 1) +
-          ": " +
-          ansLetter +
-          " (chỉ chấp nhận A/B/C/D)"
-      );
-      return;
-    }
-    tempQuestions.push({
-      text: parsedQuestions[i].text,
-      choices: parsedQuestions[i].choices,
+  const map = {A:0,B:1,C:2,D:3};
+  const tmp = [];
+  for (let i=0;i<parsed.length;i++) {
+    const k = key[i];
+    const idx = map[k];
+    if (idx===undefined)
+      return alert("Ký tự đáp án không hợp lệ tại vị trí "+(i+1)+": "+k+" (chỉ A/B/C/D).");
+    tmp.push({
+      text: parsed[i].text,
+      choices: parsed[i].choices,
       correctIndex: idx
     });
   }
-
-  questions = tempQuestions;
-  // Bắt đầu quiz mới → ghi đè state cũ
+  questions = tmp;
   startQuiz();
 }
 
-// ==================== BẮT ĐẦU LÀM BÀI ====================
+/* ---------- logic quiz ---------- */
 function startQuiz() {
-  if (questions.length === 0) {
-    alert("Chưa có câu hỏi.");
-    return;
-  }
-  let indices = questions.map((_, i) => i);
-  if (shuffleEnabled) {
-    indices = shuffleArray(indices);
-  }
+  if (!questions.length) return alert("Chưa có câu hỏi.");
+  let indices = questions.map((_,i)=>i);
+  if (shuffleEnabled) indices = shuffleArray(indices);
 
   roundList = indices;
   wrongList = [];
-  round = 1;
-  current = 0;
-  finished = false;
+  round     = 1;
+  current   = 0;
+  finished  = false;
 
   document.getElementById("quiz-box").style.display = "block";
   renderQuestion();
 }
 
-// ==================== HIỂN THỊ CÂU HỎI ====================
 function renderQuestion() {
   const qIndex = roundList[current];
   const q = questions[qIndex];
 
-  const progressText =
-    `Lượt ${round} – Câu ${current + 1}/${roundList.length} (Tổng: ${questions.length} câu)`;
-  document.getElementById("progress").innerText = progressText;
-
+  document.getElementById("progress").innerText =
+    `Lượt ${round} – Câu ${current+1}/${roundList.length} (Tổng: ${questions.length} câu)`;
   document.getElementById("quiz-title").innerText = q.text;
-  document.getElementById("quiz-text").innerText = "";
+  document.getElementById("quiz-text").innerText  = "";
 
   document.getElementById("c1").innerText = q.choices[0];
   document.getElementById("c2").innerText = q.choices[1];
   document.getElementById("c3").innerText = q.choices[2];
   document.getElementById("c4").innerText = q.choices[3];
 
-  const statusEl = document.getElementById("status");
-  statusEl.innerText = "";
-  statusEl.className = "";
+  const st = document.getElementById("status");
+  st.innerText = ""; st.className = "";
 
   selectedChoice = null;
   updateChoiceSelection();
-
-  // Mỗi lần render một câu → lưu trạng thái hiện tại
   saveCurrentState();
 }
 
-// ==================== CHỌN ĐÁP ÁN (BẤM BLOCK) ====================
 function updateChoiceSelection() {
-  const cards = document.querySelectorAll(".choice-card");
-  cards.forEach(card => {
+  document.querySelectorAll(".choice-card").forEach(card=>{
     const idx = Number(card.getAttribute("data-index"));
-    if (idx === selectedChoice) {
-      card.classList.add("selected");
-    } else {
-      card.classList.remove("selected");
-    }
+    card.classList.toggle("selected", idx===selectedChoice);
   });
 }
 
 function attachChoiceEvents() {
-  const cards = document.querySelectorAll(".choice-card");
-  cards.forEach(card => {
-    card.addEventListener("click", () => {
-      const idx = Number(card.getAttribute("data-index"));
-      selectedChoice = idx;
+  document.querySelectorAll(".choice-card").forEach(card=>{
+    card.addEventListener("click", ()=>{
+      selectedChoice = Number(card.getAttribute("data-index"));
       updateChoiceSelection();
     });
   });
 }
 
-// ==================== NỘP ĐÁP ÁN ====================
 function submitAnswer() {
   if (finished) return;
+  if (selectedChoice===null) return alert("Hãy chọn một đáp án.");
 
-  if (selectedChoice === null) {
-    alert("Hãy chọn một đáp án (bấm vào block đáp án).");
-    return;
-  }
-
-  const answer = selectedChoice;
   const qIndex = roundList[current];
   const q = questions[qIndex];
-  const statusEl = document.getElementById("status");
+  const st = document.getElementById("status");
 
-  if (answer === q.correctIndex) {
-    statusEl.innerText = "Đúng rồi! ✅";
-    statusEl.className = "ok";
+  if (selectedChoice === q.correctIndex) {
+    st.innerText = "Đúng rồi! ✅";
+    st.className = "ok";
   } else {
-    statusEl.innerText = "Sai – câu này sẽ được làm lại ở lượt sau.";
-    statusEl.className = "err";
-    if (!wrongList.includes(qIndex)) {
-      wrongList.push(qIndex);
-    }
+    st.innerText = "Sai – câu này sẽ được làm lại ở lượt sau.";
+    st.className = "err";
+    if (!wrongList.includes(qIndex)) wrongList.push(qIndex);
   }
 
-  // Ghi vào lịch sử
-  logHistoryAttempt(qIndex, answer, q.correctIndex);
-
-  // Lưu lại trạng thái sau khi chấm
   saveCurrentState();
-
-  setTimeout(() => nextQuestion(), 700);
+  setTimeout(nextQuestion, 700);
 }
 
-// ==================== NEXT QUESTION / LƯỢT MỚI ====================
 function nextQuestion() {
   if (finished) return;
-
   if (current < roundList.length - 1) {
     current++;
     renderQuestion();
   } else {
-    const statusEl = document.getElementById("status");
-    if (wrongList.length > 0) {
+    const st = document.getElementById("status");
+    if (wrongList.length) {
       round++;
-
-      let nextRound = [...wrongList];
+      let next = [...wrongList];
       wrongList = [];
-      if (shuffleEnabled) {
-        nextRound = shuffleArray(nextRound);
-      }
-      roundList = nextRound;
-      current = 0;
-
-      statusEl.innerText =
-        `Bạn vẫn còn câu sai. Chuyển sang lượt ${round} chỉ gồm các câu sai.`;
-      statusEl.className = "err";
+      if (shuffleEnabled) next = shuffleArray(next);
+      roundList = next;
+      current   = 0;
+      st.innerText = `Bạn vẫn còn câu sai. Chuyển sang lượt ${round} chỉ gồm các câu sai.`;
+      st.className = "err";
       renderQuestion();
     } else {
       finished = true;
-      statusEl.innerText = "🎉 Hoàn thành! Tất cả câu hỏi đều đúng.";
-      statusEl.className = "ok";
+      st.innerText = "🎉 Hoàn thành! Tất cả câu hỏi đều đúng.";
+      st.className = "ok";
       saveCurrentState();
     }
   }
 }
 
-// ==================== LÀM LẠI TỪ ĐẦU ====================
 function restartQuiz() {
-  if (questions.length === 0) return;
-
-  let indices = questions.map((_, i) => i);
-  if (shuffleEnabled) {
-    indices = shuffleArray(indices);
-  }
+  if (!questions.length) return;
+  let indices = questions.map((_,i)=>i);
+  if (shuffleEnabled) indices = shuffleArray(indices);
   roundList = indices;
   wrongList = [];
   round = 1;
@@ -972,14 +607,12 @@ function restartQuiz() {
   renderQuestion();
 }
 
-// ====== INIT ======
+/* ---------- init ---------- */
 function init() {
   attachChoiceEvents();
   refreshSavedSetsUI();
-  quizHistory = loadHistoryFromLS();
-  tryRestoreQuizState(); // thử khôi phục bài đang làm dở
+  tryRestoreQuizState();
 }
-
 document.addEventListener("DOMContentLoaded", init);
 </script>
 
