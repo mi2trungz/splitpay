@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Quiz luyện câu sai (dán đề + đáp án)</title>
   <style>
-    :root { color-scheme: dark; }
+    :root { color-scheme: dark light; }
+
     body {
       font-family: Arial, sans-serif;
       background: #020617;
@@ -267,6 +268,64 @@
     body.mobile-mode .choice-prefix {
       font-size: 18px;
     }
+
+    /* ====== GIAO DIỆN SÁNG ====== */
+    body.light-theme {
+      background: #f3f4f6;
+      color: #111827;
+    }
+    body.light-theme .box,
+    body.light-theme .question-card {
+      background: #ffffff;
+      border-color: #d1d5db;
+      box-shadow: 0 10px 30px rgba(15,23,42,0.12);
+    }
+    body.light-theme h2 { color: #111827; }
+    body.light-theme p,
+    body.light-theme .small-hint,
+    body.light-theme #progress {
+      color: #4b5563;
+    }
+    body.light-theme textarea,
+    body.light-theme input,
+    body.light-theme select {
+      background: #f9fafb;
+      color: #111827;
+      border-color: #d1d5db;
+      box-shadow: inset 0 0 0 1px rgba(209,213,219,0.6);
+    }
+    body.light-theme textarea:focus,
+    body.light-theme input:focus,
+    body.light-theme select:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px #6366f1;
+    }
+
+    body.light-theme .secondary-btn {
+      background: #e5e7eb;
+      color: #111827;
+      box-shadow: 0 4px 12px rgba(148,163,184,0.7);
+    }
+
+    body.light-theme .choice-card {
+      background: #ffffff;
+      border-color: #e5e7eb;
+    }
+    body.light-theme .choice-card:hover {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px rgba(79,70,229,0.25);
+    }
+    body.light-theme .choice-card.selected {
+      background: #eef2ff;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 1px rgba(79,70,229,0.5);
+    }
+    body.light-theme .choice-text { color: #111827; }
+    body.light-theme .choice-prefix { color: #6b7280; }
+
+    body.light-theme #quiz-image {
+      border-color: #e5e7eb;
+    }
   </style>
 </head>
 <body>
@@ -295,7 +354,7 @@
   <h2>Bộ đề đã lưu</h2>
   <div class="inline-row">
     <select id="savedSetsSelect"></select>
-    <button onclick="loadSelectedSet()">Load Đề</button>
+    <button onclick="loadSelectedSet()">Tải bộ đề</button>
     <button class="danger-btn" onclick="deleteSelectedSet()">Xoá bộ đề</button>
   </div>
   <div class="inline-row" style="margin-top:8px;">
@@ -304,16 +363,19 @@
   </div>
   <input type="file" id="setsFileInput" accept="application/json" style="display:none" onchange="importSetsFromFile(event)" />
   <div class="small-hint">
-    
+    Bộ đề được lưu trong LocalStorage. Bạn có thể xuất ra file JSON để backup, rồi tải lên lại khi đổi máy hoặc trình duyệt.
   </div>
 
   <hr style="border-color:#1f2937;margin:18px 0;" />
 
   <button onclick="createQuiz()">Tạo đề &amp; bắt đầu làm bài</button>
 
-  <div style="margin-top:14px;">
+  <div style="margin-top:14px;" class="inline-row">
     <button class="secondary-btn" onclick="toggleMobileMode()">
       Chế độ giao diện điện thoại: <span id="mobileModeLabel">Tắt</span>
+    </button>
+    <button class="secondary-btn" onclick="toggleTheme()">
+      Giao diện: <span id="themeLabel">Tối</span>
     </button>
   </div>
 </div>
@@ -352,7 +414,7 @@
     </div>
   </div>
 
-  <!-- Lưu ý: Next đặt ngay sau Submit để chiếm đúng vị trí -->
+  <!-- Submit & Next cùng vị trí -->
   <button id="submitBtn" onclick="submitAnswer()">Trả lời</button>
   <button id="nextBtn" class="secondary-btn" style="display:none;" onclick="manualNext()">Tiếp tục</button>
   <button id="resetBtn" class="secondary-btn" onclick="confirmReset()">Reset</button>
@@ -880,6 +942,15 @@ function toggleMobileMode() {
   try { localStorage.setItem("quizMobileMode", enabled ? "1" : "0"); } catch {}
 }
 
+/* ----- Chuyển đổi giao diện sáng / tối ----- */
+function toggleTheme() {
+  const body = document.body;
+  const isLight = body.classList.toggle("light-theme");
+  const label = document.getElementById("themeLabel");
+  if (label) label.textContent = isLight ? "Sáng" : "Tối";
+  try { localStorage.setItem("quizTheme", isLight ? "light" : "dark"); } catch {}
+}
+
 /* ---------- init ---------- */
 function init() {
   attachChoiceEvents();
@@ -887,12 +958,25 @@ function init() {
   refreshSavedSetsUI();
   tryRestoreQuizState();
 
+  // khôi phục mobile-mode
   try {
     const mm = localStorage.getItem("quizMobileMode");
     if (mm === "1") {
       document.body.classList.add("mobile-mode");
       const label = document.getElementById("mobileModeLabel");
       if (label) label.textContent = "Bật";
+    }
+  } catch {}
+
+  // khôi phục theme
+  try {
+    const theme = localStorage.getItem("quizTheme");
+    const label = document.getElementById("themeLabel");
+    if (theme === "light") {
+      document.body.classList.add("light-theme");
+      if (label) label.textContent = "Sáng";
+    } else {
+      if (label) label.textContent = "Tối";
     }
   } catch {}
 }
