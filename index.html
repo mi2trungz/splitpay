@@ -403,7 +403,7 @@
   <h2>Bộ đề đã lưu</h2>
   <div class="inline-row">
     <select id="savedSetsSelect"></select>
-    <button onclick="loadSelectedSet()">LOAD ĐỀ</button>
+    <button onclick="loadSelectedSet()">Tải bộ đề</button>
     <button class="danger-btn" onclick="deleteSelectedSet()">Xoá bộ đề</button>
   </div>
   <div class="inline-row" style="margin-top:8px;">
@@ -412,7 +412,7 @@
   </div>
   <input type="file" id="setsFileInput" accept="application/json" style="display:none" onchange="importSetsFromFile(event)" />
   <div class="small-hint">
-    
+    Bộ đề được lưu trong LocalStorage. Bạn có thể xuất ra file JSON để backup, rồi tải lên lại khi đổi máy hoặc trình duyệt.
   </div>
 
   <hr style="border-color:#1f2937;margin:18px 0;" />
@@ -464,9 +464,11 @@
     </div>
   </div>
 
-  <!-- Submit & Next cùng vị trí -->
+  <!-- Submit & Next cùng vị trí, thêm Bỏ qua & Chịu -->
   <button id="submitBtn" onclick="submitAnswer()">Trả lời</button>
   <button id="nextBtn" class="secondary-btn" style="display:none;" onclick="manualNext()">Tiếp tục</button>
+  <button id="skipBtn" class="secondary-btn" onclick="skipQuestion()">Bỏ qua</button>
+  <button id="giveUpBtn" class="secondary-btn" onclick="giveUpQuestion()">Chịu</button>
   <button id="resetBtn" class="secondary-btn" onclick="confirmReset()">Reset</button>
 
   <div id="status"></div>
@@ -499,7 +501,7 @@ let round = 1;
 let finished = false;
 let selectedChoice = null;
 let shuffleEnabled = false;
-let waitingToContinue = false; // chờ bấm "Tiếp tục" sau khi trả lời sai
+let waitingToContinue = false; // chờ bấm "Tiếp tục" sau khi trả lời sai / bỏ qua / chịu
 
 const LS_KEY_SETS  = "quizSets_v1";
 const LS_KEY_STATE = "quizCurrentState_v1";
@@ -1059,6 +1061,60 @@ function submitAnswer() {
   }
 }
 
+/* --- BỎ QUA: xem đáp án đúng, KHÔNG tính sai, KHÔNG lặp lại ở lượt sau --- */
+function skipQuestion() {
+  if (finished) return;
+  if (waitingToContinue) return;
+
+  const qIndex = roundList[current];
+  const q = questions[qIndex];
+  const st = document.getElementById("status");
+  const cards = document.querySelectorAll(".choice-card");
+
+  clearChoiceStyles();
+  selectedChoice = null;
+
+  if (cards[q.correctIndex]) {
+    cards[q.correctIndex].classList.add("correct");
+  }
+
+  st.innerText = "Bạn đã chọn \"Bỏ qua\" – đây là đáp án đúng. Câu này sẽ không tính là sai.";
+  st.className = "ok";
+
+  waitingToContinue = true;
+  document.getElementById("submitBtn").style.display = "none";
+  document.getElementById("nextBtn").style.display = "inline-block";
+  saveCurrentState();
+}
+
+/* --- CHỊU: xem đáp án đúng, CÓ tính sai, lặp lại ở lượt sai --- */
+function giveUpQuestion() {
+  if (finished) return;
+  if (waitingToContinue) return;
+
+  const qIndex = roundList[current];
+  const q = questions[qIndex];
+  const st = document.getElementById("status");
+  const cards = document.querySelectorAll(".choice-card");
+
+  clearChoiceStyles();
+  selectedChoice = null;
+
+  if (cards[q.correctIndex]) {
+    cards[q.correctIndex].classList.add("correct");
+  }
+
+  st.innerText = "Bạn đã chọn \"Chịu\" – câu này sẽ được tính là sai. Bấm \"Tiếp tục\" để sang câu kế.";
+  st.className = "err";
+
+  if (!wrongList.includes(qIndex)) wrongList.push(qIndex);
+
+  waitingToContinue = true;
+  document.getElementById("submitBtn").style.display = "none";
+  document.getElementById("nextBtn").style.display = "inline-block";
+  saveCurrentState();
+}
+
 function manualNext() {
   if (!waitingToContinue) return;
   waitingToContinue = false;
@@ -1086,7 +1142,7 @@ function nextQuestion() {
       renderQuestion();
     } else {
       finished = true;
-      st.innerText = "🎉 Hoàn thành! Tất cả câu hỏi đều đúng.";
+      st.innerText = "🎉 Hoàn thành! Tất cả câu hỏi đều đúng hoặc đã được bạn bỏ qua.";
       st.className = "ok";
       saveCurrentState();
     }
