@@ -221,6 +221,23 @@
       margin-bottom: 10px;
     }
 
+    /* ===== Hàng nút trong khi làm bài ===== */
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .button-group-left,
+    .button-group-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     /* ===== Chế độ giao diện điện thoại ===== */
     body.mobile-mode {
       font-size: 19px;
@@ -403,16 +420,16 @@
   <h2>Bộ đề đã lưu</h2>
   <div class="inline-row">
     <select id="savedSetsSelect"></select>
-    <button onclick="loadSelectedSet()">Tải bộ đề</button>
+    <button onclick="loadSelectedSet()">Load đề</button>
     <button class="danger-btn" onclick="deleteSelectedSet()">Xoá bộ đề</button>
   </div>
   <div class="inline-row" style="margin-top:8px;">
     <button class="secondary-btn" onclick="exportSets()">Xuất tất cả bộ đề (.json)</button>
-    <button onclick="triggerImportSets()">Tải bộ đề từ file</button>
+    <button onclick="triggerImportSets()">Up file bộ đề</button>
   </div>
   <input type="file" id="setsFileInput" accept="application/json" style="display:none" onchange="importSetsFromFile(event)" />
   <div class="small-hint">
-    Bộ đề được lưu trong LocalStorage. Bạn có thể xuất ra file JSON để backup, rồi tải lên lại khi đổi máy hoặc trình duyệt.
+    
   </div>
 
   <hr style="border-color:#1f2937;margin:18px 0;" />
@@ -464,12 +481,18 @@
     </div>
   </div>
 
-  <!-- Submit & Next cùng vị trí, thêm Bỏ qua & Chịu -->
-  <button id="submitBtn" onclick="submitAnswer()">Trả lời</button>
-  <button id="nextBtn" class="secondary-btn" style="display:none;" onclick="manualNext()">Tiếp tục</button>
-  <button id="skipBtn" class="secondary-btn" onclick="skipQuestion()">Bỏ qua</button>
-  <button id="giveUpBtn" class="secondary-btn" onclick="giveUpQuestion()">Chịu</button>
-  <button id="resetBtn" class="secondary-btn" onclick="confirmReset()">Reset</button>
+  <!-- Hàng nút: trái = Trả lời / Tiếp tục, phải = Bỏ qua / Chịu / Reset -->
+  <div class="button-row">
+    <div class="button-group-left">
+      <button id="submitBtn" onclick="submitAnswer()">Trả lời</button>
+      <button id="nextBtn" class="secondary-btn" style="display:none;" onclick="manualNext()">Tiếp tục</button>
+    </div>
+    <div class="button-group-right">
+      <button id="skipBtn" class="secondary-btn" onclick="skipQuestion()">Bỏ qua</button>
+      <button id="giveUpBtn" class="secondary-btn" onclick="giveUpQuestion()">Chịu</button>
+      <button id="resetBtn" class="secondary-btn" onclick="confirmReset()">Reset</button>
+    </div>
+  </div>
 
   <div id="status"></div>
 </div>
