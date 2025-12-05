@@ -326,6 +326,55 @@
     body.light-theme #quiz-image {
       border-color: #e5e7eb;
     }
+
+    /* ===== Popup chọn nhiều đề ===== */
+    #multiSetModalOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+    }
+    #multiSetModal {
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid #1f2937;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.9);
+      max-width: 420px;
+      width: 90%;
+      padding: 18px 18px 14px;
+      color: #e5e7eb;
+    }
+    #multiSetModal h3 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+    #multiSetList {
+      max-height: 260px;
+      overflow-y: auto;
+      margin: 10px 0 12px;
+      padding-right: 4px;
+    }
+    .multi-set-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    .multi-set-item label {
+      cursor: pointer;
+      flex: 1;
+    }
+    body.light-theme #multiSetModal {
+      background: #ffffff;
+      border-color: #d1d5db;
+      color: #111827;
+      box-shadow: 0 20px 40px rgba(15,23,42,0.25);
+    }
   </style>
 </head>
 <body>
@@ -354,7 +403,7 @@
   <h2>Bộ đề đã lưu</h2>
   <div class="inline-row">
     <select id="savedSetsSelect"></select>
-    <button onclick="loadSelectedSet()">Tải bộ đề</button>
+    <button onclick="loadSelectedSet()">LOAD ĐỀ</button>
     <button class="danger-btn" onclick="deleteSelectedSet()">Xoá bộ đề</button>
   </div>
   <div class="inline-row" style="margin-top:8px;">
@@ -363,12 +412,13 @@
   </div>
   <input type="file" id="setsFileInput" accept="application/json" style="display:none" onchange="importSetsFromFile(event)" />
   <div class="small-hint">
-    Bộ đề được lưu trong LocalStorage. Bạn có thể xuất ra file JSON để backup, rồi tải lên lại khi đổi máy hoặc trình duyệt.
+    
   </div>
 
   <hr style="border-color:#1f2937;margin:18px 0;" />
 
   <button onclick="createQuiz()">Tạo đề &amp; bắt đầu làm bài</button>
+  <button class="secondary-btn" onclick="openMultiSetModal()">Tạo đề từ nhiều đề đã lưu</button>
 
   <div style="margin-top:14px;" class="inline-row">
     <button class="secondary-btn" onclick="toggleMobileMode()">
@@ -427,6 +477,19 @@
   <img id="image-modal" alt="Zoom image" />
 </div>
 
+<!-- Popup chọn nhiều đề -->
+<div id="multiSetModalOverlay">
+  <div id="multiSetModal">
+    <h3>Chọn nhiều đề để gộp</h3>
+    <div id="multiSetList"></div>
+    <div class="small-hint">Chọn 1 hoặc nhiều đề bên trên, sau đó bấm "Tạo đề tổng hợp".</div>
+    <div style="text-align:right;margin-top:10px;">
+      <button class="secondary-btn" onclick="closeMultiSetModal()">Đóng</button>
+      <button onclick="createCombinedQuizFromSelected()">Tạo đề tổng hợp</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let questions = [];   // { text, choices[4], correctIndex, image? }
 let roundList = [];
@@ -454,6 +517,13 @@ function shuffleArray(arr) {
 /* chuyển mọi chuỗi có ≥3 space liên tiếp thành ___ */
 function normalizeSpaces(txt) {
   return txt.replace(/ {3,}/g, "___");
+}
+
+/* xoá prefix "Câu xx:" trong text (nếu có) */
+function stripCauPrefix(text) {
+  const m = text.match(/^Câu\s*\d+\s*:\s*([\s\S]*)$/);
+  if (!m) return text;
+  return m[1].trimStart();
 }
 
 /* ---------- bộ đề ---------- */
@@ -706,7 +776,7 @@ function parseQuestions(raw) {
   return parsed;
 }
 
-/* ---------- tạo đề ---------- */
+/* ---------- tạo đề 1 bộ ---------- */
 function createQuiz() {
   const raw = document.getElementById("rawQuestions").value.trim();
   const key = document.getElementById("answerKey").value
@@ -738,6 +808,118 @@ function createQuiz() {
     });
   }
   questions = tmp;
+  startQuiz();
+}
+
+/* ---------- tạo đề từ nhiều bộ đã lưu ---------- */
+function openMultiSetModal() {
+  const overlay = document.getElementById("multiSetModalOverlay");
+  const listDiv = document.getElementById("multiSetList");
+  const sets = getSavedSets();
+  listDiv.innerHTML = "";
+  if (!sets.length) {
+    const p = document.createElement("p");
+    p.textContent = "Chưa có bộ đề nào được lưu. Hãy lưu ít nhất 1 bộ đề trước.";
+    p.style.fontSize = "14px";
+    listDiv.appendChild(p);
+  } else {
+    sets.forEach((set, idx) => {
+      const row = document.createElement("div");
+      row.className = "multi-set-item";
+      const cb  = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = "ms_"+idx;
+      cb.value = idx;
+      const label = document.createElement("label");
+      label.setAttribute("for", "ms_"+idx);
+      label.textContent = set.name || ("Đề "+(idx+1));
+      row.appendChild(cb);
+      row.appendChild(label);
+      listDiv.appendChild(row);
+    });
+  }
+  overlay.style.display = "flex";
+}
+
+function closeMultiSetModal() {
+  document.getElementById("multiSetModalOverlay").style.display = "none";
+}
+
+function createCombinedQuizFromSelected() {
+  const sets = getSavedSets();
+  if (!sets.length) {
+    alert("Chưa có bộ đề nào để gộp.");
+    return;
+  }
+  const listDiv = document.getElementById("multiSetList");
+  const checkboxes = listDiv.querySelectorAll("input[type=checkbox]");
+  const idxs = [];
+  checkboxes.forEach(cb => {
+    if (cb.checked) idxs.push(parseInt(cb.value, 10));
+  });
+  if (!idxs.length) {
+    alert("Bạn chưa chọn đề nào để gộp.");
+    return;
+  }
+
+  const removePrefix = confirm("Bạn có muốn xoá 'Câu xx:' khỏi nội dung câu hỏi khi gộp đề không?\nOK = Có, Cancel = Không.");
+
+  let combinedQuestions = [];
+  let combinedRaw = "";
+  let combinedKey = "";
+  const map = {A:0,B:1,C:2,D:3};
+
+  for (const idx of idxs) {
+    const set = sets[idx];
+    if (!set || !set.rawQuestions || !set.answerKey) {
+      alert("Một trong các đề được chọn không hợp lệ, dừng thao tác.");
+      return;
+    }
+    const parsed = parseQuestions(set.rawQuestions);
+    const key = (set.answerKey || "").toUpperCase().replace(/\s+/g,"");
+    if (parsed.length !== key.length) {
+      alert(`Đề "${set.name}" có số câu (${parsed.length}) khác số ký tự đáp án (${key.length}). Vui lòng kiểm tra lại.`);
+      return;
+    }
+
+    for (let i=0;i<parsed.length;i++) {
+      const k = key[i];
+      const ansIdx = map[k];
+      if (ansIdx === undefined) {
+        alert(`Đề "${set.name}" có đáp án không hợp lệ tại vị trí ${i+1}: ${k}.`);
+        return;
+      }
+      let txt = parsed[i].text;
+      if (removePrefix) txt = stripCauPrefix(txt);
+      combinedQuestions.push({
+        text: txt,
+        choices: parsed[i].choices,
+        correctIndex: ansIdx,
+        image: parsed[i].image || null
+      });
+    }
+
+    combinedRaw += set.rawQuestions.trim() + "\n\n";
+    combinedKey += key;
+  }
+
+  if (!combinedQuestions.length) {
+    alert("Không tạo được câu hỏi nào sau khi gộp.");
+    return;
+  }
+
+  // Hỏi xáo trộn cho đề tổng hợp
+  shuffleEnabled = confirm("Bạn có muốn xáo trộn thứ tự câu hỏi cho đề tổng hợp không?\nOK = Có, Cancel = Không.");
+
+  questions = combinedQuestions;
+
+  // Gán vào ô raw/answer để có thể lưu lại nếu muốn
+  document.getElementById("rawQuestions").value = combinedRaw.trim();
+  document.getElementById("answerKey").value = combinedKey;
+  const selectedNames = idxs.map(i => sets[i].name || ("Đề "+(i+1)));
+  document.getElementById("setName").value = "Tổng hợp: " + selectedNames.join(" + ");
+
+  closeMultiSetModal();
   startQuiz();
 }
 
