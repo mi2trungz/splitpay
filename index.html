@@ -15,6 +15,12 @@
       font-size: 16px;
       line-height: 1.4;
     }
+
+    /* ====== SCALE (kích cỡ trang) ====== */
+    body.scale-small  { font-size: 14px; }
+    body.scale-medium { font-size: 16px; }
+    body.scale-large  { font-size: 20px; }
+
     .box {
       background: #020617;
       padding: 20px;
@@ -40,7 +46,7 @@
       color: #e5e7eb;
       outline: none;
       box-shadow: inset 0 0 0 1px rgba(15,23,42,0.6);
-      font-size: 15px;
+      font-size: 0.95em;
     }
     textarea:focus, input:focus, select:focus {
       border-color: #6366f1;
@@ -59,7 +65,7 @@
       margin-right: 8px;
       box-shadow: 0 8px 20px rgba(99,102,241,0.4);
       transition: transform 0.08s, box-shadow 0.08s, opacity 0.15s;
-      font-size: 14px;
+      font-size: 0.9em;
     }
     button:hover {
       opacity: 0.95;
@@ -116,9 +122,9 @@
       margin: 10px auto 0 auto;
     }
 
-    #progress { margin-bottom: 8px; font-size: 14px; color: #9ca3af; }
+    #progress { margin-bottom: 8px; font-size: 0.85em; color: #9ca3af; }
     #quiz-title {
-      font-size: 18px;
+      font-size: 1.15em;
       margin-bottom: 6px;
       white-space: pre-wrap;
     }
@@ -215,7 +221,7 @@
     #status.err { color: #fb7185; }
 
     .small-hint {
-      font-size: 12px;
+      font-size: 0.75em;
       color: #9ca3af;
       margin-top: -6px;
       margin-bottom: 10px;
@@ -420,16 +426,16 @@
   <h2>Bộ đề đã lưu</h2>
   <div class="inline-row">
     <select id="savedSetsSelect"></select>
-    <button onclick="loadSelectedSet()">Load đề</button>
+    <button onclick="loadSelectedSet()">Tải bộ đề</button>
     <button class="danger-btn" onclick="deleteSelectedSet()">Xoá bộ đề</button>
   </div>
   <div class="inline-row" style="margin-top:8px;">
     <button class="secondary-btn" onclick="exportSets()">Xuất tất cả bộ đề (.json)</button>
-    <button onclick="triggerImportSets()">Up file bộ đề</button>
+    <button onclick="triggerImportSets()">Tải bộ đề từ file</button>
   </div>
   <input type="file" id="setsFileInput" accept="application/json" style="display:none" onchange="importSetsFromFile(event)" />
   <div class="small-hint">
-    
+    Bộ đề được lưu trong LocalStorage. Bạn có thể xuất ra file JSON để backup, rồi tải lên lại khi đổi máy hoặc trình duyệt.
   </div>
 
   <hr style="border-color:#1f2937;margin:18px 0;" />
@@ -439,11 +445,19 @@
 
   <div style="margin-top:14px;" class="inline-row">
     <button class="secondary-btn" onclick="toggleMobileMode()">
-      Chế độ giao diện điện thoại: <span id="mobileModeLabel">Tắt</span>
+      Giao diện điện thoại: <span id="mobileModeLabel">Tắt</span>
     </button>
     <button class="secondary-btn" onclick="toggleTheme()">
       Giao diện: <span id="themeLabel">Tối</span>
     </button>
+    <div style="flex:1;min-width:140px;">
+      <label for="scaleSelect" class="small-hint" style="margin-bottom:4px;display:block;">Kích cỡ hiển thị:</label>
+      <select id="scaleSelect" onchange="changeScale()">
+        <option value="small">Nhỏ</option>
+        <option value="medium" selected>Vừa</option>
+        <option value="large">Lớn</option>
+      </select>
+    </div>
   </div>
 </div>
 
@@ -526,8 +540,11 @@ let selectedChoice = null;
 let shuffleEnabled = false;
 let waitingToContinue = false; // chờ bấm "Tiếp tục" sau khi trả lời sai / bỏ qua / chịu
 
-const LS_KEY_SETS  = "quizSets_v1";
-const LS_KEY_STATE = "quizCurrentState_v1";
+const LS_KEY_SETS   = "quizSets_v1";
+const LS_KEY_STATE  = "quizCurrentState_v1";
+const LS_KEY_SCALE  = "quizScale";
+const LS_KEY_THEME  = "quizTheme";
+const LS_KEY_MOBILE = "quizMobileMode";
 
 /* ---------- tiện ích ---------- */
 function shuffleArray(arr) {
@@ -1200,7 +1217,7 @@ function toggleMobileMode() {
   const enabled = body.classList.toggle("mobile-mode");
   const label = document.getElementById("mobileModeLabel");
   if (label) label.textContent = enabled ? "Bật" : "Tắt";
-  try { localStorage.setItem("quizMobileMode", enabled ? "1" : "0"); } catch {}
+  try { localStorage.setItem(LS_KEY_MOBILE, enabled ? "1" : "0"); } catch {}
 }
 
 /* ----- Chuyển đổi giao diện sáng / tối ----- */
@@ -1209,7 +1226,24 @@ function toggleTheme() {
   const isLight = body.classList.toggle("light-theme");
   const label = document.getElementById("themeLabel");
   if (label) label.textContent = isLight ? "Sáng" : "Tối";
-  try { localStorage.setItem("quizTheme", isLight ? "light" : "dark"); } catch {}
+  try { localStorage.setItem(LS_KEY_THEME, isLight ? "light" : "dark"); } catch {}
+}
+
+/* ----- Thay đổi kích cỡ trang ----- */
+function applyScale(scale) {
+  const body = document.body;
+  body.classList.remove("scale-small","scale-medium","scale-large");
+  if (scale === "small")  body.classList.add("scale-small");
+  if (scale === "medium") body.classList.add("scale-medium");
+  if (scale === "large")  body.classList.add("scale-large");
+  const select = document.getElementById("scaleSelect");
+  if (select) select.value = scale;
+}
+function changeScale() {
+  const select = document.getElementById("scaleSelect");
+  const val = select.value || "medium";
+  applyScale(val);
+  try { localStorage.setItem(LS_KEY_SCALE, val); } catch {}
 }
 
 /* ---------- init ---------- */
@@ -1221,7 +1255,7 @@ function init() {
 
   // khôi phục mobile-mode
   try {
-    const mm = localStorage.getItem("quizMobileMode");
+    const mm = localStorage.getItem(LS_KEY_MOBILE);
     if (mm === "1") {
       document.body.classList.add("mobile-mode");
       const label = document.getElementById("mobileModeLabel");
@@ -1231,7 +1265,7 @@ function init() {
 
   // khôi phục theme
   try {
-    const theme = localStorage.getItem("quizTheme");
+    const theme = localStorage.getItem(LS_KEY_THEME);
     const label = document.getElementById("themeLabel");
     if (theme === "light") {
       document.body.classList.add("light-theme");
@@ -1240,6 +1274,14 @@ function init() {
       if (label) label.textContent = "Tối";
     }
   } catch {}
+
+  // khôi phục scale
+  try {
+    const savedScale = localStorage.getItem(LS_KEY_SCALE) || "medium";
+    applyScale(savedScale);
+  } catch {
+    applyScale("medium");
+  }
 }
 document.addEventListener("DOMContentLoaded", init);
 </script>
